@@ -16,6 +16,7 @@
   그 기록의 평가 화면으로 바로 가는 링크가 넘어간다.
 - **평가** — 0.5점 간격 5점 만점 별점 + 한줄평. 화면에는 사진, 끼니, 시각, 식당만 보인다.
 - **피드** — 스토리처럼 넘겨 보는 카드 목록. `최신 / 별점 / 식당` 정렬과 식당별 필터.
+- **밝게 / 어둡게** — 기본은 기기 설정을 따라가고, 설정 탭에서 직접 고를 수도 있다.
 
 ## 준비
 
@@ -109,6 +110,7 @@ index.html            앱 셸 (앱바 / 화면 / 탭바)
 css/style.css         전체 스타일
 js/config.js          Supabase 키, 각종 기준값 (PIN은 DB에 있다)
 js/app.js             해시 라우터 + 역할 가드 + 탭바
+js/theme.js           밝게/어둡게 (html[data-theme] 를 찍는다)
 js/ui.js              토스트, 스피너, 반개 단위 별점 피커
 js/lib/supabase.js    클라이언트 생성
 js/lib/store.js       테이블/스토리지 접근
@@ -117,5 +119,8 @@ js/lib/geo.js         거리 계산, 식당 매칭, 현재 위치
 js/lib/share.js       공유 시트 / 링크 복사
 js/lib/format.js      끼니 분류, 날짜·별점 표기
 js/views/             login / feed / upload / rate / settings
+manifest.webmanifest  홈 화면 추가용
+apple-touch-icon.png  iOS 홈 화면 아이콘 (iOS 는 SVG 를 안 읽는다)
+icon-192/512.png      안드로이드·데스크톱 아이콘
 supabase/schema.sql   테이블 + RLS + 버킷
 ```

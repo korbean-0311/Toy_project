@@ -1,6 +1,7 @@
 import { listCafeterias, saveCafeteria, deleteCafeteria } from '../lib/store.js';
 import { currentPosition } from '../lib/geo.js';
 import { getRole, releaseDevice, ROLES } from '../lib/auth.js';
+import { MODES, getMode, setMode } from '../theme.js';
 import { esc } from '../lib/format.js';
 import { setAppbar, spinner, errorBox, toast, go } from '../ui.js';
 
@@ -86,6 +87,17 @@ export default async function settings(root) {
         </section>
 
         <section class="card">
+          <h2 class="card-title">화면</h2>
+          <div class="seg seg-inline seg-wide" id="themeSeg">
+            ${MODES.map(
+              (m) =>
+                `<button type="button" data-theme-mode="${m.id}"
+                         class="${m.id === getMode() ? 'is-on' : ''}">${m.label}</button>`,
+            ).join('')}
+          </div>
+        </section>
+
+        <section class="card">
           <h2 class="card-title">역할</h2>
           <p class="card-desc">
             이 기기가 <b>${role.emoji} ${role.label}</b> 자리를 잡고 있어요.
@@ -135,6 +147,15 @@ export default async function settings(root) {
       } catch (err) {
         toast(err.message, { error: true });
       }
+    });
+
+    root.querySelector('#themeSeg').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-theme-mode]');
+      if (!btn) return;
+      setMode(btn.dataset.themeMode);
+      root.querySelectorAll('#themeSeg button').forEach((b) => {
+        b.classList.toggle('is-on', b.dataset.themeMode === btn.dataset.themeMode);
+      });
     });
 
     root.querySelector('#hereBtn').addEventListener('click', async (e) => {

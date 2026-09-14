@@ -6,14 +6,41 @@
   <meta name="theme-color" content="#f7f6f3" />
   <title>학식 평점</title>
 
+  <!-- 첫 페인트 전에 테마를 정해둔다. js/app.js 는 module 이라 defer 로 돌아서,
+       여기서 미리 안 찍으면 어두운 테마인데도 흰 화면이 한 번 번쩍인다.
+       js/theme.js 와 같은 규칙이므로 한쪽을 고치면 다른 쪽도 같이 고칠 것. -->
+  <script>
+    (function () {
+      var theme = 'light';
+      try {
+        var saved = localStorage.getItem('hakshik.theme');
+        theme =
+          saved === 'dark' || saved === 'light'
+            ? saved
+            : window.matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'dark'
+              : 'light';
+      } catch (e) {
+        /* 저장소를 못 읽으면 밝게 */
+      }
+      document.documentElement.dataset.theme = theme;
+      if (theme === 'dark') {
+        document.querySelector('meta[name="theme-color"]').content = '#15140f';
+      }
+    })();
+  </script>
+
   <!-- 홈 화면에 추가해서 쓰면 브라우저가 저장공간을 훨씬 오래 남겨둔다 -->
   <link rel="manifest" href="manifest.webmanifest" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="학식" />
-  <link rel="apple-touch-icon" href="icon.svg" />
+  <!-- iOS 는 apple-touch-icon 으로 SVG 를 읽지 못한다. PNG 가 없으면 홈 화면에
+       이 앱 아이콘 대신 사이트 스크린샷이나 도메인 기본 아이콘이 박힌다. -->
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
 
-  <link rel="icon" href="icon.svg" />
+  <link rel="icon" type="image/svg+xml" href="icon.svg" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>

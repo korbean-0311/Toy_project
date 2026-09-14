@@ -12,12 +12,49 @@
   --ink-3: #9d9589;
   --accent: #d4541e;
   --accent-soft: #fdf0e9;
+  --on-accent: #ffffff;
   --star: #f2a03d;
   --star-off: #d8d4cc;
   --danger: #c0392b;
   --ok: #2f7d55;
+  --notice-error-bg: #fdf4f2;
+  --notice-error-line: #e9c4bf;
+  --notice-ok-bg: #f1faf5;
+  --notice-ok-line: #c3e0ce;
+  --toast-bg: #211f1b;
+  --toast-ink: #ffffff;
+  --shadow-card: 0 2px 10px rgba(0, 0, 0, .1);
   --radius: 16px;
   color-scheme: light;
+}
+
+/* 어두운 화면.
+   js/theme.js 가 <html data-theme> 을 항상 명시적으로 찍는다 — 시스템 설정을
+   따를 때도 계산해서 찍어주므로, prefers-color-scheme 블록을 따로 둘 필요가 없다.
+   밝은 주황 위에 흰 글씨는 대비가 모자라서, 버튼 글자색은 --on-accent 로 뒤집는다. */
+:root[data-theme="dark"] {
+  --bg: #15140f;
+  --surface: #1e1c16;
+  --surface-2: #29261f;
+  --line: #3a362d;
+  --ink: #f2efe6;
+  --ink-2: #aaa495;
+  --ink-3: #8a8371;
+  --accent: #f0763c;
+  --accent-soft: #3a2418;
+  --on-accent: #241309;
+  --star: #f7b155;
+  --star-off: #4a453a;
+  --danger: #f2776a;
+  --ok: #63c18f;
+  --notice-error-bg: #2c1b18;
+  --notice-error-line: #5e3a33;
+  --notice-ok-bg: #16261d;
+  --notice-ok-line: #2f5741;
+  --toast-bg: #f2efe6;
+  --toast-ink: #15140f;
+  --shadow-card: 0 2px 10px rgba(0, 0, 0, .38);
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -121,6 +158,8 @@ body {
   margin-left: auto;
 }
 .seg-inline { margin-left: 0; }
+.seg-wide { width: 100%; }
+.seg-wide button { flex: 1; text-align: center; }
 
 .seg button {
   border: 0;
@@ -158,7 +197,7 @@ body {
 .chip.is-on {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   font-weight: 600;
 }
 
@@ -175,7 +214,7 @@ body {
 .btn:disabled { opacity: .55; cursor: default; }
 .btn:active:not(:disabled) { filter: brightness(.95); }
 
-.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary { background: var(--accent); color: var(--on-accent); }
 .btn-ghost { background: var(--surface); border-color: var(--line); color: var(--ink-2); }
 .btn-ghost.danger { color: var(--danger); }
 .btn-block { display: block; width: 100%; }
@@ -229,8 +268,8 @@ input:focus, select:focus {
   border-radius: 5px;
   font-size: .92em;
 }
-.notice.is-error { border-color: #e9c4bf; background: #fdf4f2; }
-.notice.is-ok { border-color: #c3e0ce; background: #f1faf5; }
+.notice.is-error { border-color: var(--notice-error-line); background: var(--notice-error-bg); }
+.notice.is-ok { border-color: var(--notice-ok-line); background: var(--notice-ok-bg); }
 .notice .btn { margin-top: 6px; }
 .pad > .notice { margin: 0; }
 
@@ -261,8 +300,8 @@ input:focus, select:focus {
   transform: translateX(-50%);
   z-index: 50;
   max-width: 88vw;
-  background: #211f1b;
-  color: #fff;
+  background: var(--toast-bg);
+  color: var(--toast-ink);
   font-size: .83rem;
   padding: 10px 16px;
   border-radius: 99px;
@@ -313,7 +352,7 @@ input:focus, select:focus {
   overflow: hidden;
   background: #17150f;
   scroll-snap-align: start;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, .1);
+  box-shadow: var(--shadow-card);
 }
 
 .story-img { width: 100%; height: 100%; object-fit: cover; display: block; }

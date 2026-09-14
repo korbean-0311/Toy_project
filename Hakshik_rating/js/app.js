@@ -1,5 +1,6 @@
 import { isConfigured } from './lib/supabase.js';
 import { getRole, refreshRole } from './lib/auth.js';
+import { initTheme } from './theme.js';
 import { setAppbar, spinner } from './ui.js';
 
 import login from './views/login.js';
@@ -25,6 +26,7 @@ const ROUTES = [
   { match: /^#\/settings$/, view: settings },
 ];
 
+initTheme();
 window.addEventListener('hashchange', render);
 boot();
 

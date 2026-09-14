@@ -60,6 +60,16 @@ create table if not exists public.ratings (
 -- 4. PIN 표 — 서버에만 둔다. 클라이언트 코드에는 PIN이 없다.
 --    정책을 하나도 안 만들었으므로 anon/authenticated 모두 읽을 수 없고,
 --    아래 SECURITY DEFINER 함수만 들여다볼 수 있다.
+--
+--    ⚠ 실제 PIN 값은 이 파일에 넣지 말 것. 이 레포는 공개돼 있고,
+--      여기 적는 순간 PIN이 공개된다. 값은 SQL Editor 에서 따로 넣는다:
+--
+--        insert into public.app_pins (role, pin) values
+--          ('uploader', '여기에-업로더-PIN'),
+--          ('rater',    '여기에-평가자-PIN')
+--        on conflict (role) do update set pin = excluded.pin;
+--
+--      PIN을 바꾸고 싶을 때도 같은 문장을 값만 바꿔 다시 실행하면 된다.
 -- ===============================================================
 create table if not exists public.app_pins (
   role text primary key check (role in ('uploader', 'rater')),
@@ -67,12 +77,6 @@ create table if not exists public.app_pins (
 );
 
 alter table public.app_pins enable row level security;
-
--- PIN을 바꾸려면 여기 값만 고쳐서 다시 실행하면 된다.
-insert into public.app_pins (role, pin) values
-  ('uploader', '1111'),
-  ('rater',    '2222')
-on conflict (role) do update set pin = excluded.pin;
 
 -- ===============================================================
 -- 5. 역할 슬롯 — 역할당 한 기기. 선착순으로 잠긴다.

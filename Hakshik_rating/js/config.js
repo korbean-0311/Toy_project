@@ -1,7 +1,7 @@
 // ── 채워 넣어야 하는 값 ──────────────────────────────────────────
 // Supabase 대시보드 > Project Settings > Data API 에서 복사한다.
-export const SUPABASE_URL = '';
-export const SUPABASE_ANON_KEY = '';
+export const SUPABASE_URL = 'https://opzhnmggxnjlhlhaiile.supabase.co';
+export const SUPABASE_ANON_KEY = 'sb_publishable_9PaMPeCvBzlEo0Yw-kjdCg_iRHhkRTz';
 
 // 역할별 PIN. 두 명이 각자 하나씩 외워서 쓴다.
 // 주의: 클라이언트 코드에 그대로 들어가므로 소스를 보면 보인다.

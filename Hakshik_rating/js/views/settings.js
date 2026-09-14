@@ -2,6 +2,7 @@ import { listCafeterias, saveCafeteria, deleteCafeteria } from '../lib/store.js'
 import { currentPosition } from '../lib/geo.js';
 import { getRole, releaseDevice, ROLES } from '../lib/auth.js';
 import { MODES, getMode, setMode } from '../theme.js';
+import { APP_VERSION } from '../config.js';
 import { esc } from '../lib/format.js';
 import { setAppbar, spinner, errorBox, toast, go } from '../ui.js';
 
@@ -106,6 +107,16 @@ export default async function settings(root) {
           </p>
           <button class="btn btn-ghost btn-block danger" id="releaseBtn">이 기기에서 역할 놓기</button>
         </section>
+
+        <section class="card">
+          <h2 class="card-title">앱</h2>
+          <p class="card-desc">
+            버전 <b>${esc(APP_VERSION)}</b><br />
+            고친 게 반영이 안 된 것 같으면 아래를 누르세요. 브라우저가 쥐고 있는 옛 파일을
+            버리고 새로 받아옵니다. <b>로그인은 그대로 유지돼요.</b>
+          </p>
+          <button class="btn btn-ghost btn-block" id="refreshBtn">새 버전 받기</button>
+        </section>
       </div>`;
 
     bind();
@@ -147,6 +158,25 @@ export default async function settings(root) {
       } catch (err) {
         toast(err.message, { error: true });
       }
+    });
+
+    // 이 페이지가 실제로 불러온 같은-출처 파일을 전부 캐시 무시하고 다시 받아온다.
+    // localStorage 는 건드리지 않으므로 로그인 자리를 잃지 않는다
+    // (iOS 에서 '방문 기록 및 웹사이트 데이터 지우기' 를 하면 그게 같이 날아간다).
+    root.querySelector('#refreshBtn').addEventListener('click', async (e) => {
+      e.target.disabled = true;
+      e.target.textContent = '받는 중…';
+
+      const urls = new Set([
+        location.href.split('#')[0],
+        new URL('manifest.webmanifest', location.href).href,
+      ]);
+      for (const entry of performance.getEntriesByType('resource')) {
+        if (entry.name.startsWith(location.origin)) urls.add(entry.name);
+      }
+
+      await Promise.all([...urls].map((u) => fetch(u, { cache: 'reload' }).catch(() => {})));
+      location.reload();
     });
 
     root.querySelector('#themeSeg').addEventListener('click', (e) => {

@@ -59,6 +59,11 @@
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
+/* hidden 속성은 UA 스타일시트의 display:none 으로 동작하는데, 아래 규칙들이
+   .appbar { display: grid } 처럼 display 를 지정하는 순간 그게 이겨서 계속 보인다.
+   el.hidden = true 를 여기저기서 쓰므로 한 번에 막아둔다. */
+[hidden] { display: none !important; }
+
 html, body { height: 100%; }
 
 body {
@@ -335,6 +340,17 @@ input:focus, select:focus {
 }
 .pin-input::placeholder { color: var(--ink-3); }
 .gate-error { margin: 0; font-size: .8rem; color: var(--danger); }
+
+.gate-takeover {
+  width: 100%;
+  display: grid;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px 14px;
+}
+.gate-takeover p { margin: 0 0 4px; font-size: .84rem; color: var(--ink-2); }
 
 /* ── 스토리 피드 ───────────────────────────────────────────── */
 

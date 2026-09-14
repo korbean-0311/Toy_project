@@ -31,10 +31,16 @@ export async function refreshRole() {
 }
 
 /**
- * PIN으로 역할을 선점한다.
- * @returns {{ok: true, role: string} | {ok: false, reason: string}}
+ * PIN으로 역할 자리를 잡는다.
+ *
+ * 자리가 이미 차 있으면 바로 뺏지 않고 `taken` 을 돌려준다. 화면에서 확인을 받은 뒤
+ * `takeover: true` 로 다시 부르면 이 기기로 넘겨온다 (기존 기기는 다음 접속 때 로그아웃).
+ *
+ * @returns {{ok: true, role: string}
+ *         | {ok: false, taken: true, role: string, reason: string}
+ *         | {ok: false, reason: string}}
  */
-export async function signInWithPin(pin) {
+export async function signInWithPin(pin, { takeover = false } = {}) {
   const { data: current } = await supabase.auth.getSession();
 
   if (!current.session) {
@@ -50,11 +56,31 @@ export async function signInWithPin(pin) {
     }
   }
 
-  const { data: role, error } = await supabase.rpc('claim_role', { pin: String(pin).trim() });
+  const { data, error } = await supabase.rpc('claim_role', {
+    pin: String(pin).trim(),
+    takeover,
+  });
   if (error) return { ok: false, reason: error.message };
 
-  setRole(role);
-  return { ok: true, role };
+  switch (data?.status) {
+    case 'ok':
+      setRole(data.role);
+      return { ok: true, role: data.role };
+
+    case 'taken':
+      return {
+        ok: false,
+        taken: true,
+        role: data.role,
+        reason: `${ROLES[data.role]?.label ?? '이 역할'} 자리를 다른 기기가 쓰고 있어요.`,
+      };
+
+    case 'bad_pin':
+      return { ok: false, reason: 'PIN이 맞지 않아요.' };
+
+    default:
+      return { ok: false, reason: '로그인 상태를 확인하지 못했어요. 다시 시도해주세요.' };
+  }
 }
 
 /**

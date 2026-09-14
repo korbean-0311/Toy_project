@@ -9,6 +9,10 @@ export const SUPABASE_ANON_KEY = 'sb_publishable_9PaMPeCvBzlEo0Yw-kjdCg_iRHhkRTz
 // PIN은 클라이언트에 없다. DB의 app_pins 테이블에 있고,
 // 맞는지 판정은 서버(claim_role 함수)가 한다. 바꾸려면 schema.sql 을 고쳐 다시 실행.
 
+// 배포할 때마다 올린다. 설정 화면에 그대로 찍히므로, 폰이 새 버전을 받았는지
+// 눈으로 바로 확인할 수 있다 (GitHub Pages 가 파일을 10분간 캐시한다).
+export const APP_VERSION = '2026-09-14.4';
+
 export const BUCKET = 'meal-photos';
 
 // 사진 서명 URL 유효시간 (초). 버킷이 비공개라 이걸로만 읽는다.

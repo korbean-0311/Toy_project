@@ -109,44 +109,69 @@ as $$
   select role from public.role_claims where user_id = auth.uid();
 $$;
 
--- PIN을 맞히면 해당 역할 슬롯을 선점한다.
--- 이미 잡아둔 슬롯이 있으면 그걸 그대로 돌려준다 (재로그인).
-create or replace function public.claim_role(pin text)
-returns text
+-- PIN을 맞히면 해당 역할 슬롯을 잡는다.
+--
+-- 슬롯이 이미 차 있으면 바로 뺏지 않고 'taken' 을 돌려준다. 앱이 그걸 받아
+-- "다른 기기가 쓰고 있어요. 이 기기로 옮길까요?" 를 묻고, 사용자가 확인하면
+-- takeover := true 로 다시 불러 기존 기기의 자리를 넘겨받는다.
+--
+-- 즉 PIN 을 아는 사람은 언제든 자기 기기로 옮겨올 수 있다. 이렇게 두는 이유는,
+-- 브라우저 저장소가 날아가면(캐시 삭제, 기기 교체, iOS 의 저장소 회수) 본인도
+-- 다시 못 들어오는 상황이 실제로 반복됐기 때문이다. 막아주는 위협(27자리 난수를
+-- 맞히는 공격)보다 치르는 비용이 크다는 판단.
+-- 대신 동시에 두 기기가 같은 역할을 쓰는 일은 여전히 불가능하고, PIN 을 모르는
+-- 사람은 키를 가져도 아무것도 못 한다는 성질은 그대로다.
+--
+-- 반환값: {"status": "ok"|"taken"|"bad_pin"|"no_session", "role": ...}
+drop function if exists public.claim_role(text);
+drop function if exists public.claim_role(text, boolean);
+
+create function public.claim_role(pin text, takeover boolean default false)
+returns jsonb
 language plpgsql
 security definer
 set search_path = public
 as $$
 declare
-  mine text;
-  want text;
+  mine   text;
+  want   text;
+  holder uuid;
 begin
   if auth.uid() is null then
-    raise exception '세션이 없습니다';
+    return jsonb_build_object('status', 'no_session');
   end if;
 
+  -- 이미 자리를 가지고 있으면 그대로 돌려준다 (재접속)
   select r.role into mine from public.role_claims r where r.user_id = auth.uid();
   if mine is not null then
-    return mine;
+    return jsonb_build_object('status', 'ok', 'role', mine);
   end if;
 
   select p.role into want from public.app_pins p where p.pin = claim_role.pin;
   if want is null then
-    raise exception 'PIN이 맞지 않습니다';
+    return jsonb_build_object('status', 'bad_pin');
   end if;
 
-  begin
-    insert into public.role_claims (role, user_id) values (want, auth.uid());
-  exception when unique_violation then
-    raise exception '이 PIN은 이미 다른 기기가 쓰고 있습니다';
-  end;
+  select r.user_id into holder from public.role_claims r where r.role = want;
 
-  return want;
+  if holder is not null then
+    if not takeover then
+      return jsonb_build_object('status', 'taken', 'role', want);
+    end if;
+    delete from public.role_claims where role = want;
+  end if;
+
+  insert into public.role_claims (role, user_id) values (want, auth.uid());
+  return jsonb_build_object('status', 'ok', 'role', want);
+
+exception when unique_violation then
+  -- 같은 순간에 다른 기기가 먼저 들어온 경우
+  return jsonb_build_object('status', 'taken', 'role', want);
 end;
 $$;
 
-revoke all on function public.claim_role(text) from public, anon;
-grant execute on function public.claim_role(text) to authenticated;
+revoke all on function public.claim_role(text, boolean) from public, anon;
+grant execute on function public.claim_role(text, boolean) to authenticated;
 grant execute on function public.my_role() to authenticated;
 
 -- ===============================================================

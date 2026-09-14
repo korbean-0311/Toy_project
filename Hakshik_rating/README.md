@@ -44,7 +44,7 @@ export const SUPABASE_ANON_KEY = 'sb_publishable_...';
 PIN은 여기 없다. `supabase/schema.sql` 의 `app_pins` INSERT 문에 있고, 바꾸려면 그 값을
 고쳐서 SQL을 다시 실행하면 된다.
 
-### 3. 로컬에서 띄우기
+### 4. 로컬에서 띄우기
 
 ```bash
 python -m http.server 5173 --directory Hakshik_rating
@@ -54,12 +54,12 @@ python -m http.server 5173 --directory Hakshik_rating
 localhost는 예외라 PC에서는 되지만, 폰에서 `http://192.168.x.x:5173` 으로 들어가면
 카메라·위치 버튼이 먹지 않는다. 폰으로 쓰려면 배포부터 해야 한다.
 
-### 4. 배포
+### 5. 배포
 
 정적 파일이라 아무 데나 올라간다. 이 폴더를 루트로 잡고 Vercel / Netlify /
 Cloudflare Pages 중 하나에 연결하면 HTTPS 주소가 나온다. 그 주소를 둘이 북마크해서 쓴다.
 
-### 5. 식당 등록
+### 6. 식당 등록
 
 배포한 주소로 들어가 설정 탭에서 식당을 추가한다. **식당에 실제로 서 있을 때
 `📍 현재 위치 넣기`를 누르는 게 제일 정확하다.** 반경은 150m 정도가 무난하고,

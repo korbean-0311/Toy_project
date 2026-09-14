@@ -1,37 +1,8 @@
-// 사진에서 메타데이터(GPS/촬영시각)를 뽑고, 업로드용으로 줄인다.
+// 업로드용으로 사진을 줄인다. EXIF 읽기는 exif.js 에 따로 있다 —
+// 그쪽이 26KB 짜리 라이브러리를 끌고 오기 때문에, 리사이즈만 필요한 곳이
+// 그걸 같이 받지 않도록 갈라뒀다.
 
-import exifr from 'https://cdn.jsdelivr.net/npm/exifr@7.1.3/dist/full.esm.mjs';
 import { IMAGE_MAX_EDGE, IMAGE_QUALITY } from '../config.js';
-
-/**
- * EXIF에서 좌표와 촬영시각을 읽는다.
- * 브라우저 카메라로 방금 찍은 사진에는 GPS가 거의 없고,
- * iOS는 앨범 사진도 GPS를 지워서 넘기는 경우가 많다. 둘 다 null일 수 있다.
- * @returns {{coords: {lat, lng} | null, takenAt: Date | null}}
- */
-export async function readExif(file) {
-  let coords = null;
-  let takenAt = null;
-
-  try {
-    const gps = await exifr.gps(file);
-    if (gps && Number.isFinite(gps.latitude) && Number.isFinite(gps.longitude)) {
-      coords = { lat: gps.latitude, lng: gps.longitude };
-    }
-  } catch {
-    // EXIF가 없거나 못 읽는 포맷 — 조용히 넘어간다
-  }
-
-  try {
-    const tags = await exifr.parse(file, { pick: ['DateTimeOriginal', 'CreateDate'] });
-    const raw = tags?.DateTimeOriginal ?? tags?.CreateDate;
-    if (raw instanceof Date && !Number.isNaN(raw.getTime())) takenAt = raw;
-  } catch {
-    // 위와 같음
-  }
-
-  return { coords, takenAt };
-}
 
 /**
  * 긴 변을 IMAGE_MAX_EDGE 로 줄여 JPEG Blob 으로 다시 굽는다.

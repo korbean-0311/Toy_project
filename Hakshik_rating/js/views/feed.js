@@ -21,8 +21,13 @@ const SORTS = {
 let sortKey = localStorage.getItem('hakshik.sort') || 'recent';
 let placeFilter = 'all';
 
+// 탭을 오갈 때마다 왕복 두 번(기록 조회 → URL 서명)을 기다리면 그동안 화면이 비어 있다.
+// 마지막으로 받아둔 걸 먼저 그려놓고, 새로 받아온 게 다를 때만 갈아끼운다.
+let cached = null;
+
 export default async function feed(root) {
   const role = getRole();
+  let meals = cached ?? [];
 
   setAppbar(`
     <div class="appbar-row">
@@ -39,41 +44,17 @@ export default async function feed(root) {
     </div>
     <div class="appbar-row" id="placeRow"></div>`);
 
-  root.innerHTML = spinner();
-
-  let meals;
-  try {
-    meals = await listMeals();
-    const urls = await signedUrls(meals.map((m) => m.photo_path));
-    meals = meals.map((m) => ({ ...m, url: urls.get(m.photo_path) ?? '' }));
-  } catch (err) {
-    root.innerHTML = errorBox(esc(err.message));
-    return;
-  }
-
-  const places = [...new Set(meals.map((m) => m.cafeteria?.name).filter(Boolean))].sort((a, b) =>
-    a.localeCompare(b, 'ko'),
-  );
-
   const placeRow = document.getElementById('placeRow');
-  placeRow.innerHTML = `
-    <div class="chips">
-      <button type="button" class="chip ${placeFilter === 'all' ? 'is-on' : ''}" data-place="all">전체</button>
-      ${places
-        .map(
-          (p) =>
-            `<button type="button" class="chip ${placeFilter === p ? 'is-on' : ''}"
-                     data-place="${esc(p)}">${esc(p)}</button>`,
-        )
-        .join('')}
-    </div>`;
 
   document.getElementById('sortSeg').addEventListener('click', (e) => {
     const btn = e.target.closest('[data-sort]');
     if (!btn) return;
     sortKey = btn.dataset.sort;
     localStorage.setItem('hakshik.sort', sortKey);
-    feed(root);
+    document.querySelectorAll('#sortSeg [data-sort]').forEach((b) => {
+      b.classList.toggle('is-on', b.dataset.sort === sortKey);
+    });
+    paint(); // 정렬은 이미 받아둔 걸 다시 늘어놓는 것뿐이라 서버를 다시 부르지 않는다
   });
 
   placeRow.addEventListener('click', (e) => {
@@ -83,7 +64,60 @@ export default async function feed(root) {
     paint();
   });
 
-  paint();
+  if (cached) {
+    renderChips();
+    paint();
+  } else {
+    root.innerHTML = spinner();
+  }
+
+  try {
+    const fresh = await load();
+    const isNew = stamp(fresh) !== stamp(meals);
+    cached = fresh;
+    meals = fresh;
+    if (isNew || !root.querySelector('.stories, .notice')) {
+      renderChips();
+      paint();
+    }
+  } catch (err) {
+    // 이미 뭔가 그려져 있으면 화면을 날리지 않고 알려만 준다
+    if (!cached) root.innerHTML = errorBox(esc(err.message));
+    else toast('새로 불러오지 못했어요', { error: true });
+  }
+
+  async function load() {
+    const rows = await listMeals();
+    const urls = await signedUrls(rows.map((m) => m.photo_path));
+    return rows.map((m) => ({ ...m, url: urls.get(m.photo_path) ?? '' }));
+  }
+
+  /** 내용이 실제로 바뀌었는지 보는 지문. 같으면 다시 안 그린다. */
+  function stamp(list) {
+    return list
+      .map((m) => `${m.id}:${m.rating?.stars ?? ''}:${m.rating?.comment ?? ''}:${m.url}`)
+      .join('|');
+  }
+
+  function renderChips() {
+    const places = [...new Set(meals.map((m) => m.cafeteria?.name).filter(Boolean))].sort((a, b) =>
+      a.localeCompare(b, 'ko'),
+    );
+    if (placeFilter !== 'all' && !places.includes(placeFilter)) placeFilter = 'all';
+
+    placeRow.innerHTML = places.length
+      ? `<div class="chips">
+           <button type="button" class="chip ${placeFilter === 'all' ? 'is-on' : ''}" data-place="all">전체</button>
+           ${places
+             .map(
+               (p) =>
+                 `<button type="button" class="chip ${placeFilter === p ? 'is-on' : ''}"
+                          data-place="${esc(p)}">${esc(p)}</button>`,
+             )
+             .join('')}
+         </div>`
+      : '';
+  }
 
   function paint() {
     placeRow.querySelectorAll('[data-place]').forEach((b) => {
@@ -110,7 +144,7 @@ export default async function feed(root) {
     root.innerHTML = `<div class="stories">${shown.map(card).join('')}</div>`;
 
     root.querySelectorAll('[data-action]').forEach((btn) => {
-      btn.addEventListener('click', () => act(btn.dataset.action, btn.dataset.id, shown));
+      btn.addEventListener('click', () => act(btn.dataset.action, btn.dataset.id));
     });
   }
 
@@ -152,8 +186,8 @@ export default async function feed(root) {
       </article>`;
   }
 
-  async function act(action, id, shown) {
-    const meal = shown.find((m) => m.id === id);
+  async function act(action, id) {
+    const meal = meals.find((m) => m.id === id);
     if (!meal) return;
 
     if (action === 'rate') return go(`#/rate/${id}`);
@@ -164,11 +198,18 @@ export default async function feed(root) {
       try {
         await deleteMeal(meal);
         meals = meals.filter((m) => m.id !== id);
+        cached = meals;
         toast('지웠어요');
+        renderChips();
         paint();
       } catch (err) {
         toast(err.message, { error: true });
       }
     }
   }
+}
+
+/** 다른 화면에서 내용을 바꿨을 때, 피드가 옛 걸 먼저 그리지 않도록 버린다. */
+export function invalidateFeed() {
+  cached = null;
 }

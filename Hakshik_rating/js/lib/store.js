@@ -76,29 +76,80 @@ export async function uploadPhoto(blob, type) {
   return path;
 }
 
+/* ── 사진 URL ─────────────────────────────────────────────────
+   버킷이 비공개라 사진은 만료되는 서명 URL로만 읽는다.
+
+   서명할 때마다 토큰이 달라지므로 URL 도 매번 바뀐다. 그대로 두면 피드에 들어올
+   때마다 브라우저가 "처음 보는 주소" 로 여겨서 사진을 전부 다시 받는다. 그래서
+   발급한 URL 을 만료 시각과 함께 기억해뒀다가 재사용한다 — 주소가 같아야 캐시가 산다.
+   ──────────────────────────────────────────────────────────── */
+
+const URL_CACHE_KEY = 'hakshik.photoUrls';
+const EXPIRY_SKEW = 90_000; // 만료 직전 것은 새로 받는다
+
+const urlCache = loadUrlCache();
+
+function loadUrlCache() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(URL_CACHE_KEY) ?? '{}');
+    const now = Date.now();
+    return new Map(Object.entries(raw).filter(([, v]) => v?.expiresAt > now + EXPIRY_SKEW));
+  } catch {
+    return new Map();
+  }
+}
+
+function saveUrlCache() {
+  try {
+    localStorage.setItem(URL_CACHE_KEY, JSON.stringify(Object.fromEntries(urlCache)));
+  } catch {
+    /* 저장 공간이 없으면 이번 세션 동안만 쓴다 */
+  }
+}
+
+/** 사진을 갈아끼웠을 때 호출한다. 안 그러면 옛 사진이 캐시에서 계속 나온다. */
+export function forgetPhotoUrl(path) {
+  urlCache.delete(path);
+  saveUrlCache();
+}
+
 /**
- * 버킷이 비공개라 사진은 만료되는 서명 URL로만 읽는다.
- * 여러 장이면 한 번에 서명한다.
  * @returns {Promise<Map<string, string>>} photo_path → url
  */
 export async function signedUrls(paths) {
   const unique = [...new Set(paths)].filter(Boolean);
   if (!unique.length) return new Map();
 
-  const { data, error } = await supabase.storage
-    .from(BUCKET)
-    .createSignedUrls(unique, SIGNED_URL_TTL);
-  if (error) throw error;
+  const now = Date.now();
+  const out = new Map();
+  const missing = [];
 
-  return new Map((data ?? []).filter((d) => d.signedUrl).map((d) => [d.path, d.signedUrl]));
+  for (const path of unique) {
+    const hit = urlCache.get(path);
+    if (hit && hit.expiresAt > now + EXPIRY_SKEW) out.set(path, hit.url);
+    else missing.push(path);
+  }
+
+  if (missing.length) {
+    const { data, error } = await supabase.storage
+      .from(BUCKET)
+      .createSignedUrls(missing, SIGNED_URL_TTL);
+    if (error) throw error;
+
+    const expiresAt = now + SIGNED_URL_TTL * 1000;
+    for (const row of data ?? []) {
+      if (!row.signedUrl) continue;
+      urlCache.set(row.path, { url: row.signedUrl, expiresAt });
+      out.set(row.path, row.signedUrl);
+    }
+    saveUrlCache();
+  }
+
+  return out;
 }
 
 export async function signedUrl(path) {
-  const { data, error } = await supabase.storage
-    .from(BUCKET)
-    .createSignedUrl(path, SIGNED_URL_TTL);
-  if (error) throw error;
-  return data.signedUrl;
+  return (await signedUrls([path])).get(path) ?? '';
 }
 
 /** 이미 있는 경로에 파일을 올린다 (사진 교체용). */
@@ -123,6 +174,8 @@ export async function createMeal(meal) {
 export async function deleteMeal(meal) {
   const { error } = await supabase.from('meals').delete().eq('id', meal.id);
   if (error) throw error;
+
+  forgetPhotoUrl(meal.photo_path);
 
   // 사진이 안 지워져도 기록 삭제를 되돌리진 않는다. 다만 조용히 넘기면
   // 버킷에 고아 파일이 쌓이는 걸 알 길이 없으므로 콘솔에는 남긴다.

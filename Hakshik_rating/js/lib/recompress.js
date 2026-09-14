@@ -4,7 +4,7 @@
 // 경로를 그대로 두는 이유: meals.photo_path 를 건드릴 필요가 없어서 (meals 에는
 // update 정책이 없다) 사진만 갈아끼우면 기록도 평가도 그대로 남는다.
 
-import { listMeals, signedUrl, uploadPhotoAt, deletePhoto } from './store.js';
+import { listMeals, signedUrl, uploadPhotoAt, deletePhoto, forgetPhotoUrl } from './store.js';
 import { shrink } from './photo.js';
 
 // 이만큼도 안 줄면 그냥 둔다. 괜히 지웠다 올리는 위험만 진다.
@@ -40,6 +40,9 @@ export async function recompressAll(onProgress) {
         await uploadPhotoAt(meal.photo_path, original, original.type || 'image/jpeg');
         throw err;
       }
+
+      // 경로가 그대로라 기억해둔 서명 URL 이 옛 사진을 계속 내어준다. 버린다.
+      forgetPhotoUrl(meal.photo_path);
 
       result.changed += 1;
       result.saved += original.size - blob.size;

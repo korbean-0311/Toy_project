@@ -3,12 +3,6 @@ import { getRole, refreshRole } from './lib/auth.js';
 import { initTheme } from './theme.js';
 import { setAppbar, spinner } from './ui.js';
 
-import login from './views/login.js';
-import feed from './views/feed.js';
-import upload from './views/upload.js';
-import rate from './views/rate.js';
-import settings from './views/settings.js';
-
 const screen = document.getElementById('screen');
 const tabbar = document.getElementById('tabbar');
 
@@ -18,12 +12,18 @@ const TABS = [
   { hash: '#/settings', label: '설정', emoji: '⚙️' },
 ];
 
+// 화면은 필요할 때 불러온다. 특히 올리기 화면은 EXIF 라이브러리를 끌고 오는데(26KB),
+// 평가자는 평생 안 쓰고 업로더도 앱을 켜는 그 순간에는 필요 없다.
 const ROUTES = [
-  { match: /^#\/login$/, view: login, open: true },
-  { match: /^#\/?$/, view: feed },
-  { match: /^#\/upload$/, view: upload, role: 'uploader' },
-  { match: /^#\/rate\/([\w-]+)$/, view: rate, params: (m) => ({ id: m[1] }) },
-  { match: /^#\/settings$/, view: settings },
+  { match: /^#\/login$/, load: () => import('./views/login.js'), open: true },
+  { match: /^#\/?$/, load: () => import('./views/feed.js') },
+  { match: /^#\/upload$/, load: () => import('./views/upload.js'), role: 'uploader' },
+  {
+    match: /^#\/rate\/([\w-]+)$/,
+    load: () => import('./views/rate.js'),
+    params: (m) => ({ id: m[1] }),
+  },
+  { match: /^#\/settings$/, load: () => import('./views/settings.js') },
 ];
 
 initTheme();
@@ -31,7 +31,7 @@ window.addEventListener('hashchange', render);
 boot();
 
 // 저장된 익명 세션에 아직 역할이 붙어 있는지 서버에 한 번 확인하고 시작한다.
-// (다른 기기에서 슬롯을 놓아버린 경우 등을 여기서 걸러낸다)
+// (다른 기기에서 자리를 넘겨받은 경우 등을 여기서 걸러낸다)
 async function boot() {
   if (!isConfigured) return setupNotice();
 
@@ -50,6 +50,7 @@ async function boot() {
     // 오프라인이면 캐시된 역할로 그냥 진행한다
   }
   render();
+  preloadViews();
 }
 
 async function render() {
@@ -75,11 +76,22 @@ async function render() {
 
   const params = route.params?.(hash.match(route.match)) ?? {};
   try {
-    await route.view(screen, params);
+    const { default: view } = await route.load();
+    await view(screen, params);
   } catch (err) {
     console.error(err);
     screen.innerHTML = `<div class="notice is-error"><b>화면을 그리지 못했어요</b><span>${err.message}</span></div>`;
   }
+}
+
+/** 첫 화면을 그리고 난 뒤, 한가할 때 나머지 화면을 미리 받아둔다. */
+function preloadViews() {
+  const idle = window.requestIdleCallback ?? ((fn) => setTimeout(fn, 1500));
+  idle(() => {
+    import('./views/settings.js');
+    if (getRole() === 'uploader') import('./views/upload.js');
+    else import('./views/rate.js');
+  });
 }
 
 function paintTabs(hash, role) {

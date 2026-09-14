@@ -1,7 +1,6 @@
 import { listCafeterias, saveCafeteria, deleteCafeteria } from '../lib/store.js';
 import { currentPosition } from '../lib/geo.js';
 import { getRole, isUploader, releaseDevice, ROLES } from '../lib/auth.js';
-import { recompressAll } from '../lib/recompress.js';
 import { MODES, getMode, setMode } from '../theme.js';
 import { APP_VERSION, IMAGE_MAX_EDGE } from '../config.js';
 import { esc, formatBytes } from '../lib/format.js';
@@ -195,6 +194,8 @@ export default async function settings(root) {
       log.textContent = '사진을 확인하는 중…';
 
       try {
+        // 누르는 순간에만 받아온다 (설정 화면 여는 것만으로 끌고 오지 않게)
+        const { recompressAll } = await import('../lib/recompress.js');
         const r = await recompressAll(({ done, total }) => {
           log.textContent = `${total}장 중 ${done}장 처리했어요…`;
         });

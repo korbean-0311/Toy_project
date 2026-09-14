@@ -2,6 +2,7 @@ import { getMeal, signedUrl, saveRating } from '../lib/store.js';
 import { getRole } from '../lib/auth.js';
 import { MEAL_LABEL, MEAL_EMOJI, formatDate, formatTime, starText, esc } from '../lib/format.js';
 import { setAppbar, spinner, errorBox, starPicker, toast, go } from '../ui.js';
+import { invalidateFeed } from './feed.js';
 
 export default async function rate(root, { id }) {
   setAppbar(`
@@ -92,6 +93,7 @@ export default async function rate(root, { id }) {
         stars,
         comment: body.querySelector('#comment').value.trim(),
       });
+      invalidateFeed(); // 방금 남긴 별점이 피드에 바로 보이게
       toast('평가를 남겼어요');
       go('#/');
     } catch (err) {

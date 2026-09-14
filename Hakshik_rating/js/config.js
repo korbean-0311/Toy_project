@@ -1,18 +1,18 @@
 // ── 채워 넣어야 하는 값 ──────────────────────────────────────────
-// Supabase 대시보드 > Project Settings > Data API 에서 복사한다.
+// Supabase 대시보드 > Project Settings > Data API / API Keys 에서 복사한다.
+// publishable(anon) 키는 공개용으로 설계된 값이라 여기 그대로 둬도 된다.
+// 접근 통제는 DB의 RLS가 한다. secret / service_role 키는 절대 넣지 말 것.
 export const SUPABASE_URL = 'https://opzhnmggxnjlhlhaiile.supabase.co';
 export const SUPABASE_ANON_KEY = 'sb_publishable_9PaMPeCvBzlEo0Yw-kjdCg_iRHhkRTz';
-
-// 역할별 PIN. 두 명이 각자 하나씩 외워서 쓴다.
-// 주의: 클라이언트 코드에 그대로 들어가므로 소스를 보면 보인다.
-//       외부에 새면 곤란한 값(다른 서비스 비밀번호 등)은 절대 쓰지 말 것.
-export const PINS = {
-  uploader: '1111', // A — 사진 올리는 사람
-  rater: '2222',    // B — 별점 주는 사람
-};
 // ───────────────────────────────────────────────────────────────
 
+// PIN은 클라이언트에 없다. DB의 app_pins 테이블에 있고,
+// 맞는지 판정은 서버(claim_role 함수)가 한다. 바꾸려면 schema.sql 을 고쳐 다시 실행.
+
 export const BUCKET = 'meal-photos';
+
+// 사진 서명 URL 유효시간 (초). 버킷이 비공개라 이걸로만 읽는다.
+export const SIGNED_URL_TTL = 60 * 60;
 
 // 업로드 전 리사이즈 기준 (긴 변 픽셀, JPEG 품질)
 export const IMAGE_MAX_EDGE = 1600;

@@ -5,7 +5,8 @@
 
 ## 지금 되는 것
 
-- **역할 고정** — PIN을 넣으면 `올리는 사람` / `평가하는 사람` 중 하나로 기기에 저장된다.
+- **역할 선점** — PIN을 넣으면 그 기기가 `올리는 사람` / `평가하는 사람` 자리를 가져가고 잠긴다.
+  같은 PIN으로 세 번째 기기가 들어오려 하면 DB가 거부한다.
 - **사진 올리기** — `사진 찍기`(카메라 바로 실행)와 `앨범에서 선택` 두 갈래.
 - **메타데이터 추출** — 사진 EXIF에서 GPS와 촬영시각을 읽는다. GPS가 없으면 업로드 시점의
   단말 위치로 대신하고, 그것도 안 되면 식당을 직접 고른다.
@@ -24,17 +25,24 @@
 통째로 실행한다. 테이블 3개(`cafeterias`, `meals`, `ratings`), RLS 정책,
 사진용 Storage 버킷(`meal-photos`)이 한 번에 만들어진다.
 
-### 2. 설정값 채우기
+### 2. 익명 로그인 켜기
 
-`js/config.js` 를 열고 두 줄을 채운다. Supabase 대시보드 → Project Settings → Data API
-에서 복사할 수 있다.
+**Authentication → Sign In / Providers → Anonymous sign-ins** 를 켠다.
+이메일도 비밀번호도 쓰지 않고, 기기에 신분증만 하나 발급하기 위한 것이다.
+이게 꺼져 있으면 PIN 화면에서 로그인이 실패한다.
+
+### 3. 설정값 채우기
+
+`js/config.js` 의 두 줄. Supabase 대시보드 → Project Settings → Data API / API Keys
+에서 복사한다.
 
 ```js
 export const SUPABASE_URL = 'https://xxxxxxxx.supabase.co';
-export const SUPABASE_ANON_KEY = 'eyJhbGciOi...';
+export const SUPABASE_ANON_KEY = 'sb_publishable_...';
 ```
 
-같은 파일의 `PINS` 도 원하는 숫자로 바꾼다.
+PIN은 여기 없다. `supabase/schema.sql` 의 `app_pins` INSERT 문에 있고, 바꾸려면 그 값을
+고쳐서 SQL을 다시 실행하면 된다.
 
 ### 3. 로컬에서 띄우기
 
@@ -62,10 +70,21 @@ Cloudflare Pages 중 하나에 연결하면 HTTPS 주소가 나온다. 그 주�
 - **EXIF GPS는 자주 비어 있다.** 브라우저 카메라로 찍은 사진에는 거의 안 들어가고,
   iOS는 앨범 사진을 넘길 때 위치를 지우는 경우가 많다. 그래서 단말 위치를 보조로 쓴다.
   둘 다 실패하면 업로드 화면에서 식당을 직접 고르면 된다.
-- **PIN은 진짜 인증이 아니다.** 클라이언트 코드에 그대로 들어가므로 소스를 보면 보인다.
-  "누가 어느 쪽인지" 고정하는 스위치로만 쓴다.
-- **RLS는 열려 있다.** Supabase Auth 없이 anon 키로 접근하므로, 주소와 키를 아는 사람은
-  읽고 쓸 수 있다. 링크를 외부에 뿌리지 않는 선에서 쓰고, 더 조여야 하면 Auth를 붙인다.
+- **잠금은 DB가 건다.** `role_claims.role` 이 PRIMARY KEY라 역할당 행이 하나뿐이고, 그 INSERT는
+  `claim_role()` 안에서만 일어난다. 클라이언트에는 INSERT 권한 자체가 없다. 슬롯이 없으면
+  `my_role()` 이 null이라 모든 테이블과 사진이 거부된다. 그래서 publishable 키가 공개돼도
+  키만으로는 아무것도 못 한다.
+- **PIN 자릿수가 곧 강도다.** PIN은 코드에 없지만, 슬롯이 아직 비어 있는 동안에는 남이 PIN을
+  맞히면 그 자리를 가져갈 수 있다. 4자리 숫자는 1만 가지라 자동 대입에 뚫린다. 평생 한 번
+  입력하는 값이니 길게 잡는 게 좋다. 두 자리가 모두 채워진 뒤에는 PIN을 맞혀도 무의미해진다.
+- **로그인은 안 풀린다.** 익명 세션이 `localStorage` 에 남고 토큰은 자동 갱신된다.
+  Supabase 무료 플랜은 세션 만료·유휴 타임아웃이 기본으로 꺼져 있어서 시간이 지나도 유지된다.
+  풀리는 경우는 브라우저 저장소가 비워질 때뿐이다 — 시크릿 모드, 수동 삭제, 또는 iOS가
+  한동안 안 쓴 사이트의 저장소를 회수하는 경우. **홈 화면에 추가해서 쓰면 이 회수를 피한다.**
+- **세션을 잃으면 슬롯이 묶인다.** 자리는 잡혀 있는데 신분증이 없어진 상태가 된다. 그래서
+  기기를 바꾸거나 브라우저 기록을 지우기 전에는 설정 탭의 `이 기기에서 역할 놓기` 를 먼저
+  눌러야 한다. 이미 잃어버렸다면 Supabase 대시보드 → Table Editor → `role_claims` 에서
+  해당 행을 지우면 다시 PIN으로 들어올 수 있다.
 - 사진은 올릴 때 긴 변 1600px JPEG로 다시 구워서 보낸다. 이 과정에서 EXIF가 떨어져 나가므로
   Storage에 남는 파일에는 위치 정보가 없다 (좌표는 DB 컬럼에만 들어간다).
 
@@ -74,7 +93,7 @@ Cloudflare Pages 중 하나에 연결하면 HTTPS 주소가 나온다. 그 주�
 ```
 index.html            앱 셸 (앱바 / 화면 / 탭바)
 css/style.css         전체 스타일
-js/config.js          Supabase 키, PIN, 각종 기준값
+js/config.js          Supabase 키, 각종 기준값 (PIN은 DB에 있다)
 js/app.js             해시 라우터 + 역할 가드 + 탭바
 js/ui.js              토스트, 스피너, 반개 단위 별점 피커
 js/lib/supabase.js    클라이언트 생성

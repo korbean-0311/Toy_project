@@ -1,6 +1,6 @@
 import { isConfigured } from './lib/supabase.js';
-import { getRole } from './lib/auth.js';
-import { setAppbar } from './ui.js';
+import { getRole, refreshRole } from './lib/auth.js';
+import { setAppbar, spinner } from './ui.js';
 
 import login from './views/login.js';
 import feed from './views/feed.js';
@@ -26,7 +26,29 @@ const ROUTES = [
 ];
 
 window.addEventListener('hashchange', render);
-render();
+boot();
+
+// 저장된 익명 세션에 아직 역할이 붙어 있는지 서버에 한 번 확인하고 시작한다.
+// (다른 기기에서 슬롯을 놓아버린 경우 등을 여기서 걸러낸다)
+async function boot() {
+  if (!isConfigured) return setupNotice();
+
+  // 브라우저가 저장공간을 함부로 비우지 못하게 막아둔다.
+  // 이게 걸려 있어야 세션이 오래 버틴다 (특히 iOS).
+  try {
+    await navigator.storage?.persist?.();
+  } catch {
+    /* 지원 안 하면 그냥 넘어간다 */
+  }
+
+  screen.innerHTML = spinner('들어가는 중');
+  try {
+    await refreshRole();
+  } catch {
+    // 오프라인이면 캐시된 역할로 그냥 진행한다
+  }
+  render();
+}
 
 async function render() {
   const hash = location.hash || '#/';

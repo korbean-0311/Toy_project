@@ -1,4 +1,4 @@
-import { getMeal, photoUrl, saveRating } from '../lib/store.js';
+import { getMeal, signedUrl, saveRating } from '../lib/store.js';
 import { getRole } from '../lib/auth.js';
 import { MEAL_LABEL, MEAL_EMOJI, formatDate, formatTime, starText, esc } from '../lib/format.js';
 import { setAppbar, spinner, errorBox, starPicker, toast, go } from '../ui.js';
@@ -14,8 +14,10 @@ export default async function rate(root, { id }) {
   root.innerHTML = spinner();
 
   let meal;
+  let photo;
   try {
     meal = await getMeal(id);
+    photo = await signedUrl(meal.photo_path);
   } catch (err) {
     root.innerHTML = errorBox('그 기록을 찾을 수 없어요. 지워졌을 수도 있어요.');
     return;
@@ -31,7 +33,7 @@ export default async function rate(root, { id }) {
   root.innerHTML = `
     <div class="pad">
       <figure class="preview">
-        <img src="${esc(photoUrl(meal.photo_path))}" alt="학식 사진" />
+        <img src="${esc(photo)}" alt="학식 사진" />
       </figure>
 
       <div class="head">

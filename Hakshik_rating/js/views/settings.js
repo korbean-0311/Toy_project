@@ -1,6 +1,6 @@
 import { listCafeterias, saveCafeteria, deleteCafeteria } from '../lib/store.js';
 import { currentPosition } from '../lib/geo.js';
-import { getRole, signOut, ROLES } from '../lib/auth.js';
+import { getRole, releaseDevice, ROLES } from '../lib/auth.js';
 import { esc } from '../lib/format.js';
 import { setAppbar, spinner, errorBox, toast, go } from '../ui.js';
 
@@ -88,9 +88,11 @@ export default async function settings(root) {
         <section class="card">
           <h2 class="card-title">역할</h2>
           <p class="card-desc">
-            지금 이 기기는 <b>${role.emoji} ${role.label}</b> 으로 저장돼 있어요.
+            이 기기가 <b>${role.emoji} ${role.label}</b> 자리를 잡고 있어요.
+            이 역할은 기기 한 대만 쓸 수 있어서, 다른 기기로 옮기려면 여기서 먼저 놓아줘야 해요.
+            <b>브라우저 기록을 지우기 전에도 꼭 눌러주세요.</b> 안 그러면 자리가 잡힌 채로 남아요.
           </p>
-          <button class="btn btn-ghost btn-block danger" id="signOutBtn">역할 바꾸기 (로그아웃)</button>
+          <button class="btn btn-ghost btn-block danger" id="releaseBtn">이 기기에서 역할 놓기</button>
         </section>
       </div>`;
 
@@ -156,10 +158,17 @@ export default async function settings(root) {
       render();
     });
 
-    root.querySelector('#signOutBtn').addEventListener('click', () => {
-      if (!confirm('역할을 지우고 PIN 화면으로 돌아갈까요?')) return;
-      signOut();
-      go('#/login');
+    root.querySelector('#releaseBtn').addEventListener('click', async (e) => {
+      if (!confirm('이 역할을 놓아줄까요? 같은 PIN으로 다른 기기가 들어올 수 있게 돼요.')) return;
+
+      e.target.disabled = true;
+      try {
+        await releaseDevice();
+        go('#/login');
+      } catch (err) {
+        toast(err.message, { error: true });
+        e.target.disabled = false;
+      }
     });
 
     root.querySelector('#cafeForm').addEventListener('submit', async (e) => {

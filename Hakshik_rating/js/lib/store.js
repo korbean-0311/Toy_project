@@ -1,7 +1,7 @@
 // Supabase 접근은 전부 여기를 거친다.
 
 import { supabase } from './supabase.js';
-import { BUCKET } from '../config.js';
+import { BUCKET, SIGNED_URL_TTL } from '../config.js';
 
 /* ── 식당 ─────────────────────────────────────────────────────── */
 
@@ -76,8 +76,29 @@ export async function uploadPhoto(blob, type) {
   return path;
 }
 
-export function photoUrl(path) {
-  return supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+/**
+ * 버킷이 비공개라 사진은 만료되는 서명 URL로만 읽는다.
+ * 여러 장이면 한 번에 서명한다.
+ * @returns {Promise<Map<string, string>>} photo_path → url
+ */
+export async function signedUrls(paths) {
+  const unique = [...new Set(paths)].filter(Boolean);
+  if (!unique.length) return new Map();
+
+  const { data, error } = await supabase.storage
+    .from(BUCKET)
+    .createSignedUrls(unique, SIGNED_URL_TTL);
+  if (error) throw error;
+
+  return new Map((data ?? []).filter((d) => d.signedUrl).map((d) => [d.path, d.signedUrl]));
+}
+
+export async function signedUrl(path) {
+  const { data, error } = await supabase.storage
+    .from(BUCKET)
+    .createSignedUrl(path, SIGNED_URL_TTL);
+  if (error) throw error;
+  return data.signedUrl;
 }
 
 export async function createMeal(meal) {

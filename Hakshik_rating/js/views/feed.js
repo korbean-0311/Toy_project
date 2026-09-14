@@ -1,4 +1,4 @@
-import { listMeals, photoUrl, deleteMeal } from '../lib/store.js';
+import { listMeals, signedUrls, deleteMeal } from '../lib/store.js';
 import { getRole } from '../lib/auth.js';
 import { MEAL_LABEL, MEAL_EMOJI, formatDate, formatTime, starText, esc } from '../lib/format.js';
 import { setAppbar, spinner, errorBox, toast, go } from '../ui.js';
@@ -44,6 +44,8 @@ export default async function feed(root) {
   let meals;
   try {
     meals = await listMeals();
+    const urls = await signedUrls(meals.map((m) => m.photo_path));
+    meals = meals.map((m) => ({ ...m, url: urls.get(m.photo_path) ?? '' }));
   } catch (err) {
     root.innerHTML = errorBox(esc(err.message));
     return;
@@ -136,7 +138,7 @@ export default async function feed(root) {
 
     return `
       <article class="story">
-        <img class="story-img" src="${esc(photoUrl(m.photo_path))}" alt="" loading="lazy" />
+        <img class="story-img" src="${esc(m.url)}" alt="" loading="lazy" />
         <div class="story-veil"></div>
         <div class="story-body">
           <div class="story-meta">

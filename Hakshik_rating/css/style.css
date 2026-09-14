@@ -287,10 +287,14 @@ input:focus, select:focus {
 .gate-form { width: 100%; display: grid; gap: 10px; }
 .pin-input {
   text-align: center;
-  letter-spacing: .4em;
-  font-size: 1.3rem !important;
-  padding: 14px 12px !important;
+  /* 27자짜리 코드가 한 줄에 들어가야 하고, 문자 폭이 고르면 눈으로 대조하기 쉽다.
+     iOS 자동 확대를 막으려면 16px 아래로 내리면 안 된다. */
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 16px !important;
+  letter-spacing: .01em;
+  padding: 14px 10px !important;
 }
+.pin-input::placeholder { color: var(--ink-3); }
 .gate-error { margin: 0; font-size: .8rem; color: var(--danger); }
 
 /* ── 스토리 피드 ───────────────────────────────────────────── */

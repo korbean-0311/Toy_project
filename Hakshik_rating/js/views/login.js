@@ -11,8 +11,11 @@ export default function login(root) {
       <p class="gate-sub">PIN을 넣으면 이 기기가 그 역할을 가져가요.<br />역할당 한 기기만 들어올 수 있어요.</p>
 
       <form class="gate-form" id="pinForm">
-        <input class="pin-input" id="pin" type="password" inputmode="numeric"
-               autocomplete="off" maxlength="8" placeholder="• • • •" aria-label="PIN" />
+        <!-- 긴 코드라서 가리지 않는다. 한 번만 넣는 값이고, 가려두면
+             오타가 안 보여서 "PIN이 맞지 않습니다" 만 반복하게 된다. -->
+        <input class="pin-input" id="pin" type="text"
+               autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
+               maxlength="64" placeholder="hakshik-0000-0000-0000-0000" aria-label="PIN" />
         <button class="btn btn-primary" type="submit" id="goBtn">들어가기</button>
         <p class="gate-error" id="pinError" role="alert" hidden></p>
       </form>

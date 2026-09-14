@@ -12,7 +12,9 @@ export const SUPABASE_ANON_KEY = 'sb_publishable_9PaMPeCvBzlEo0Yw-kjdCg_iRHhkRTz
 export const BUCKET = 'meal-photos';
 
 // 사진 서명 URL 유효시간 (초). 버킷이 비공개라 이걸로만 읽는다.
-export const SIGNED_URL_TTL = 60 * 60;
+// 피드 이미지는 lazy 로딩이라, 앱을 켜둔 채 한참 뒤에 스크롤하면 그때 URL을 쓴다.
+// 너무 짧으면 그 사진이 깨지므로 넉넉히 잡는다.
+export const SIGNED_URL_TTL = 4 * 60 * 60;
 
 // 업로드 전 리사이즈 기준 (긴 변 픽셀, JPEG 품질)
 export const IMAGE_MAX_EDGE = 1600;

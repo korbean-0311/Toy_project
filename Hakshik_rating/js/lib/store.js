@@ -110,8 +110,16 @@ export async function createMeal(meal) {
 export async function deleteMeal(meal) {
   const { error } = await supabase.from('meals').delete().eq('id', meal.id);
   if (error) throw error;
-  // 사진 삭제는 실패해도 기록 삭제를 되돌리지 않는다
-  await supabase.storage.from(BUCKET).remove([meal.photo_path]).catch(() => {});
+
+  // 사진이 안 지워져도 기록 삭제를 되돌리진 않는다. 다만 조용히 넘기면
+  // 버킷에 고아 파일이 쌓이는 걸 알 길이 없으므로 콘솔에는 남긴다.
+  // (storage 는 reject 대신 {error} 를 돌려주므로 catch 로는 못 잡는다)
+  const { error: storageError } = await supabase.storage
+    .from(BUCKET)
+    .remove([meal.photo_path]);
+  if (storageError) {
+    console.warn('사진을 지우지 못했습니다:', meal.photo_path, storageError.message);
+  }
 }
 
 /* ── 평가 ─────────────────────────────────────────────────────── */

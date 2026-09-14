@@ -21,6 +21,9 @@ const SORTS = {
 let sortKey = localStorage.getItem('hakshik.sort') || 'recent';
 let placeFilter = 'all';
 
+// 사진은 가장 최근 기록만 펼쳐두고 나머지는 접는다. 여기 담긴 건 사용자가 직접 펼친 것들.
+const expanded = new Set();
+
 // 탭을 오갈 때마다 왕복 두 번(기록 조회 → URL 서명)을 기다리면 그동안 화면이 비어 있다.
 // 마지막으로 받아둔 걸 먼저 그려놓고, 새로 받아온 게 다를 때만 갈아끼운다.
 let cached = null;
@@ -141,19 +144,51 @@ export default async function feed(root) {
       return;
     }
 
-    root.innerHTML = `<div class="stories">${shown.map(card).join('')}</div>`;
+    // 가장 최근 것 하나만 사진을 펼쳐둔다. 정렬을 바꿔도 기준은 '찍은 시각' 그대로다.
+    const latestId = meals.reduce(
+      (best, m) => (!best || new Date(m.taken_at) > new Date(best.taken_at) ? m : best),
+      null,
+    )?.id;
+
+    root.innerHTML = `<div class="stories">${shown
+      .map((m) => (m.id === latestId || expanded.has(m.id) ? openCard(m, m.id !== latestId) : slimCard(m)))
+      .join('')}</div>`;
 
     root.querySelectorAll('[data-action]').forEach((btn) => {
       btn.addEventListener('click', () => act(btn.dataset.action, btn.dataset.id));
     });
+
+    root.querySelectorAll('[data-toggle]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.toggle;
+        if (expanded.has(id)) expanded.delete(id);
+        else expanded.add(id);
+        paint();
+      });
+    });
   }
 
-  function card(m) {
-    const taken = new Date(m.taken_at);
-    const place = m.cafeteria
+  /* 카드 내용은 펼친 것과 접은 것이 같다. 접힌 쪽은 사진 대신 글자만 놓는다. */
+
+  function place(m) {
+    return m.cafeteria
       ? `${esc(m.cafeteria.name)}${m.cafeteria.building ? ` · ${esc(m.cafeteria.building)}` : ''}`
       : '식당 미확인';
+  }
 
+  function actions(m) {
+    if (!m.rating && role === 'rater') {
+      return `<button class="btn btn-primary btn-sm" data-action="rate" data-id="${m.id}">평가하기</button>`;
+    }
+    if (role === 'uploader') {
+      return `<button class="btn btn-ghost btn-sm" data-action="share" data-id="${m.id}">공유</button>
+              <button class="btn btn-ghost btn-sm danger" data-action="delete" data-id="${m.id}">삭제</button>`;
+    }
+    return '';
+  }
+
+  function openCard(m, collapsible) {
+    const taken = new Date(m.taken_at);
     const rated = m.rating
       ? `<div class="story-rating">
            <span class="stars">${starText(Number(m.rating.stars))}</span>
@@ -162,13 +197,11 @@ export default async function feed(root) {
          ${m.rating.comment ? `<p class="story-comment">${esc(m.rating.comment)}</p>` : ''}`
       : `<div class="story-pending">아직 평가 전</div>`;
 
-    const action =
-      !m.rating && role === 'rater'
-        ? `<button class="btn btn-primary btn-sm" data-action="rate" data-id="${m.id}">평가하기</button>`
-        : role === 'uploader'
-          ? `<button class="btn btn-ghost btn-sm" data-action="share" data-id="${m.id}">공유</button>
-             <button class="btn btn-ghost btn-sm danger" data-action="delete" data-id="${m.id}">삭제</button>`
-          : '';
+    const buttons =
+      actions(m) +
+      (collapsible
+        ? `<button class="btn btn-ghost btn-sm" data-toggle="${m.id}">접기</button>`
+        : '');
 
     return `
       <article class="story">
@@ -179,10 +212,37 @@ export default async function feed(root) {
             <span class="pill">${MEAL_EMOJI[m.meal_type]} ${MEAL_LABEL[m.meal_type]}</span>
             <span class="pill">${esc(formatDate(taken))} ${esc(formatTime(taken))}</span>
           </div>
-          <h2 class="story-place">${place}</h2>
+          <h2 class="story-place">${place(m)}</h2>
           ${rated}
-          ${action ? `<div class="story-actions">${action}</div>` : ''}
+          ${buttons ? `<div class="story-actions">${buttons}</div>` : ''}
         </div>
+      </article>`;
+  }
+
+  function slimCard(m) {
+    const taken = new Date(m.taken_at);
+    const rated = m.rating
+      ? `<div class="slim-rating">
+           <span class="stars">${starText(Number(m.rating.stars))}</span>
+           <span class="stars-num">${Number(m.rating.stars).toFixed(1)}</span>
+         </div>
+         ${m.rating.comment ? `<p class="slim-comment">${esc(m.rating.comment)}</p>` : ''}`
+      : `<div class="slim-pending">아직 평가 전</div>`;
+
+    const buttons = actions(m);
+
+    return `
+      <article class="slim">
+        <div class="slim-head">
+          <div class="slim-meta">
+            <span class="pill">${MEAL_EMOJI[m.meal_type]} ${MEAL_LABEL[m.meal_type]}</span>
+            <span class="pill">${esc(formatDate(taken))} ${esc(formatTime(taken))}</span>
+          </div>
+          <button class="slim-open" data-toggle="${m.id}" aria-label="사진 보기">🖼️</button>
+        </div>
+        <h2 class="slim-place">${place(m)}</h2>
+        ${rated}
+        ${buttons ? `<div class="slim-actions">${buttons}</div>` : ''}
       </article>`;
   }
 

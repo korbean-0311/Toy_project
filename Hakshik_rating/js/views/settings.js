@@ -1,9 +1,10 @@
 import { listCafeterias, saveCafeteria, deleteCafeteria } from '../lib/store.js';
 import { currentPosition } from '../lib/geo.js';
-import { getRole, releaseDevice, ROLES } from '../lib/auth.js';
+import { getRole, isUploader, releaseDevice, ROLES } from '../lib/auth.js';
+import { recompressAll } from '../lib/recompress.js';
 import { MODES, getMode, setMode } from '../theme.js';
-import { APP_VERSION } from '../config.js';
-import { esc } from '../lib/format.js';
+import { APP_VERSION, IMAGE_MAX_EDGE } from '../config.js';
+import { esc, formatBytes } from '../lib/format.js';
 import { setAppbar, spinner, errorBox, toast, go } from '../ui.js';
 
 export default async function settings(root) {
@@ -116,6 +117,21 @@ export default async function settings(root) {
           <button class="btn btn-ghost btn-block danger" id="releaseBtn">이 기기에서 역할 놓기</button>
         </section>
 
+        ${
+          isUploader()
+            ? `<section class="card">
+                 <h2 class="card-title">사진 정리</h2>
+                 <p class="card-desc">
+                   압축 기준을 바꾸기 전에 올린 사진은 예전 크기 그대로예요.
+                   지금 기준(긴 변 ${IMAGE_MAX_EDGE}px)으로 다시 구워서 덮어씁니다.
+                   기록과 평가는 그대로 남고, 이미 작은 사진은 건드리지 않아요.
+                 </p>
+                 <button class="btn btn-ghost btn-block" id="recompressBtn">사진 다시 압축</button>
+                 <p class="dim" id="recompressLog" hidden></p>
+               </section>`
+            : ''
+        }
+
         <section class="card">
           <h2 class="card-title">앱</h2>
           <p class="card-desc">
@@ -169,6 +185,35 @@ export default async function settings(root) {
         render();
       } catch (err) {
         toast(err.message, { error: true });
+      }
+    });
+
+    root.querySelector('#recompressBtn')?.addEventListener('click', async (e) => {
+      const log = root.querySelector('#recompressLog');
+      e.target.disabled = true;
+      log.hidden = false;
+      log.textContent = '사진을 확인하는 중…';
+
+      try {
+        const r = await recompressAll(({ done, total }) => {
+          log.textContent = `${total}장 중 ${done}장 처리했어요…`;
+        });
+
+        // 실패를 "할 게 없었다" 로 뭉뚱그리지 않는다 — 셋을 따로 적는다
+        const parts = [];
+        if (r.changed) parts.push(`${r.changed}장 다시 압축 (${formatBytes(r.saved)} 줄임)`);
+        if (r.skipped) parts.push(`${r.skipped}장은 이미 작아서 그대로`);
+        if (r.failed) parts.push(`⚠ ${r.failed}장 실패 — 사진은 안 지워졌어요`);
+        log.textContent = r.total ? parts.join(' · ') : '올라온 사진이 없어요.';
+
+        if (r.failed) toast(`${r.failed}장을 처리하지 못했어요`, { error: true });
+        else if (r.changed) toast('사진을 정리했어요');
+        else toast('정리할 사진이 없어요');
+      } catch (err) {
+        log.textContent = '';
+        toast(err.message, { error: true });
+      } finally {
+        e.target.disabled = false;
       }
     });
 

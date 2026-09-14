@@ -101,6 +101,19 @@ export async function signedUrl(path) {
   return data.signedUrl;
 }
 
+/** 이미 있는 경로에 파일을 올린다 (사진 교체용). */
+export async function uploadPhotoAt(path, blob, type) {
+  const { error } = await supabase.storage
+    .from(BUCKET)
+    .upload(path, blob, { contentType: type, cacheControl: '31536000' });
+  if (error) throw error;
+}
+
+export async function deletePhoto(path) {
+  const { error } = await supabase.storage.from(BUCKET).remove([path]);
+  if (error) throw error;
+}
+
 export async function createMeal(meal) {
   const { data, error } = await supabase.from('meals').insert(meal).select().single();
   if (error) throw error;

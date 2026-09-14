@@ -88,13 +88,24 @@ body {
   display: flex;
   flex-direction: column;
   position: relative;
+
+  /* viewport-fit=cover 라 내용이 화면 맨 위까지 올라간다. 상태바·다이내믹 아일랜드
+     자리는 시스템이 반투명하게 덮어서 글자가 묻히므로 그만큼 비워둔다.
+     앱바가 없는 화면(PIN 입력)도 같이 내려가도록 셸에 준다. */
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* 홈 화면 앱으로 띄우면 주소창이 없어 더 위까지 차오르고, 시스템이 덮는 영역도
+   그만큼 두껍다. 여유를 더 준다. */
+@media (display-mode: standalone) {
+  .app { padding-top: calc(env(safe-area-inset-top, 0px) + 14px); }
 }
 
 .appbar {
   flex: none;
   background: var(--bg);
   border-bottom: 1px solid var(--line);
-  padding: max(8px, env(safe-area-inset-top)) 14px 8px;
+  padding: 10px 14px 8px;
   display: grid;
   gap: 8px;
 }

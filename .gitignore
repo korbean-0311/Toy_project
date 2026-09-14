@@ -12,3 +12,12 @@ desktop.ini
 node_modules/
 npm-debug.log*
 dist/
+
+# 비밀값 — 이 레포는 공개돼 있다. 절대 커밋하지 말 것.
+# (.local. 이 들어간 파일은 전부 무시된다)
+*.local.txt
+*.local.json
+*.local.env
+**/pins.local.*
+.env
+.env.*

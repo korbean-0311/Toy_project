@@ -25,6 +25,13 @@ export function formatTime(value) {
   }).format(d);
 }
 
+export function formatBytes(bytes) {
+  if (!Number.isFinite(bytes)) return '';
+  if (bytes < 1024) return `${bytes}B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)}KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)}MB`;
+}
+
 /** 별점 숫자를 ★★★½☆ 모양으로. */
 export function starText(stars) {
   const full = Math.floor(stars);

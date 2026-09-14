@@ -1,7 +1,9 @@
 import { readExif, shrink } from '../lib/photo.js';
 import { currentPosition, matchCafeteria } from '../lib/geo.js';
 import { listCafeterias, uploadPhoto, createMeal } from '../lib/store.js';
-import { mealTypeOf, MEAL_LABEL, MEAL_EMOJI, formatDate, formatTime, esc } from '../lib/format.js';
+import {
+  mealTypeOf, MEAL_LABEL, MEAL_EMOJI, formatDate, formatTime, formatBytes, esc,
+} from '../lib/format.js';
 import { setAppbar, toast, go } from '../ui.js';
 import { shareMeal } from '../lib/share.js';
 
@@ -98,6 +100,8 @@ export default async function upload(root) {
       autoCafeteriaId: matched?.cafeteria.id ?? '',
       distance: matched?.distance ?? null,
       mealType: mealTypeOf(takenAt ?? new Date()),
+      originalSize: file.size,
+      size: blob.size,
     };
 
     renderStage();
@@ -127,6 +131,13 @@ export default async function upload(root) {
                 ${MEAL_EMOJI.dinner} 저녁
               </button>
             </div>
+          </dd>
+        </div>
+        <div class="fact">
+          <dt>용량</dt>
+          <dd class="dim">
+            ${esc(formatBytes(d.originalSize))} → ${esc(formatBytes(d.size))}
+            ${d.size < d.originalSize ? `<b>(${Math.round((1 - d.size / d.originalSize) * 100)}% 줄임)</b>` : ''}
           </dd>
         </div>
         <div class="fact">

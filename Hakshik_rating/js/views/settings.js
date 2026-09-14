@@ -19,6 +19,9 @@ export default async function settings(root) {
   }
 
   let editing = null; // 수정 중인 식당, 새로 추가면 null
+  // 식당은 처음에 한 번 등록하고 나면 거의 안 건드리므로 폼은 접어둔다.
+  // 수정을 누르면 그때 펼친다.
+  let formOpen = false;
 
   render();
 
@@ -43,8 +46,12 @@ export default async function settings(root) {
         </section>
 
         <section class="card">
-          <h2 class="card-title">${editing ? '식당 수정' : '식당 추가'}</h2>
-          <form class="form" id="cafeForm">
+          <button type="button" class="card-toggle" id="formToggle"
+                  aria-expanded="${formOpen}" aria-controls="cafeForm">
+            <span class="card-title">${editing ? '식당 수정' : '식당 추가'}</span>
+            <span class="card-chevron" aria-hidden="true">▾</span>
+          </button>
+          <form class="form" id="cafeForm" ${formOpen ? '' : 'hidden'}>
             <label class="field">
               <span>이름</span>
               <input id="name" type="text" required maxlength="40"
@@ -101,9 +108,10 @@ export default async function settings(root) {
         <section class="card">
           <h2 class="card-title">역할</h2>
           <p class="card-desc">
-            이 기기가 <b>${role.emoji} ${role.label}</b> 자리를 잡고 있어요.
-            이 역할은 기기 한 대만 쓸 수 있어서, 다른 기기로 옮기려면 여기서 먼저 놓아줘야 해요.
-            <b>브라우저 기록을 지우기 전에도 꼭 눌러주세요.</b> 안 그러면 자리가 잡힌 채로 남아요.
+            이 기기가 <b>${role.emoji} ${role.label}</b> 자리를 잡고 있어요. 한 번에 기기 한 대만 쓸 수 있어요.
+            놓아주면 PIN 화면으로 돌아가고, 다른 기기가 그 자리를 가져갈 수 있어요.
+            <br />기기를 바꾸는 거라면 굳이 여기서 놓지 않아도 돼요 — 새 기기에서 PIN을 넣으면
+            <b>이 기기로 옮기기</b>가 뜹니다.
           </p>
           <button class="btn btn-ghost btn-block danger" id="releaseBtn">이 기기에서 역할 놓기</button>
         </section>
@@ -141,6 +149,7 @@ export default async function settings(root) {
       const editId = e.target.closest('[data-edit]')?.dataset.edit;
       if (editId) {
         editing = cafeterias.find((c) => c.id === editId);
+        formOpen = true; // 수정하려면 폼이 보여야 한다
         render();
         return;
       }
@@ -152,12 +161,21 @@ export default async function settings(root) {
       try {
         await deleteCafeteria(delId);
         cafeterias = cafeterias.filter((c) => c.id !== delId);
-        if (editing?.id === delId) editing = null;
+        if (editing?.id === delId) {
+          editing = null;
+          formOpen = false;
+        }
         toast('지웠어요');
         render();
       } catch (err) {
         toast(err.message, { error: true });
       }
+    });
+
+    root.querySelector('#formToggle').addEventListener('click', () => {
+      formOpen = !formOpen;
+      if (!formOpen) editing = null; // 접으면 수정하던 것도 취소
+      render();
     });
 
     // 이 페이지가 실제로 불러온 같은-출처 파일을 전부 캐시 무시하고 다시 받아온다.
@@ -206,6 +224,7 @@ export default async function settings(root) {
 
     root.querySelector('#cancelBtn')?.addEventListener('click', () => {
       editing = null;
+      formOpen = false;
       render();
     });
 
@@ -249,6 +268,7 @@ export default async function settings(root) {
           : [...cafeterias, saved];
         cafeterias.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
         editing = null;
+        formOpen = false; // 저장했으면 다시 접는다
         toast('저장했어요');
         render();
       } catch (err) {

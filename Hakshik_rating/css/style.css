@@ -561,7 +561,32 @@ input:focus, select:focus {
   display: grid;
   gap: 10px;
 }
-.card-title { margin: 0; font-size: .95rem; letter-spacing: -0.01em; }
+.card-title { margin: 0; font-size: .95rem; font-weight: 700; letter-spacing: -0.01em; }
+
+/* 접히는 카드 머리 */
+.card-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  border: 0;
+  background: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.card-chevron {
+  color: var(--ink-3);
+  font-size: .8rem;
+  line-height: 1;
+  transition: transform .18s ease;
+}
+.card-toggle[aria-expanded="true"] .card-chevron { transform: rotate(180deg); }
 .card-desc { margin: 0; font-size: .8rem; color: var(--ink-2); }
 
 .rows { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }

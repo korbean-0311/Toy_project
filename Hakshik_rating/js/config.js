@@ -11,7 +11,7 @@ export const SUPABASE_ANON_KEY = 'sb_publishable_9PaMPeCvBzlEo0Yw-kjdCg_iRHhkRTz
 
 // 배포할 때마다 올린다. 설정 화면에 그대로 찍히므로, 폰이 새 버전을 받았는지
 // 눈으로 바로 확인할 수 있다 (GitHub Pages 가 파일을 10분간 캐시한다).
-export const APP_VERSION = '2026-09-14.4';
+export const APP_VERSION = '2026-09-14.5';
 
 export const BUCKET = 'meal-photos';
 
@@ -20,9 +20,11 @@ export const BUCKET = 'meal-photos';
 // 너무 짧으면 그 사진이 깨지므로 넉넉히 잡는다.
 export const SIGNED_URL_TTL = 4 * 60 * 60;
 
-// 업로드 전 리사이즈 기준 (긴 변 픽셀, JPEG 품질)
-export const IMAGE_MAX_EDGE = 1600;
-export const IMAGE_QUALITY = 0.85;
+// 업로드 전 리사이즈 기준 (긴 변 픽셀, JPEG 품질).
+// 폰 원본은 4000px 넘고 3~5MB라 그대로 올리면 느리고 용량만 먹는다.
+// 화면에서 가장 크게 쓰이는 곳이 전체폭 사진 카드라, 3배 밀도 기준으로도 1080이면 충분하다.
+export const IMAGE_MAX_EDGE = 1080;
+export const IMAGE_QUALITY = 0.82;
 
 // 이 시각 이전이면 점심, 이후면 저녁으로 자동 분류한다 (24시간제).
 export const DINNER_FROM_HOUR = 16;

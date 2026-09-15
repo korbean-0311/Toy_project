@@ -57,6 +57,26 @@ create table if not exists public.ratings (
 );
 
 -- ===============================================================
+-- 3-1. 댓글 — 평가의 한줄평이 스레드의 뿌리고, 여기 달리는 게 답글이다.
+--      parent_id 가 null 이면 그 한줄평에 직접 단 답글,
+--      값이 있으면 그 답글에 다시 단 답글(계속 들어간다).
+--      올린 사람이든 평가한 사람이든 둘 다 달 수 있다.
+-- ===============================================================
+create table if not exists public.comments (
+  id         uuid primary key default gen_random_uuid(),
+  meal_id    uuid not null references public.meals(id) on delete cascade,
+  parent_id  uuid references public.comments(id) on delete cascade,
+  -- 누가 썼는지는 서버가 정한다 (클라이언트가 남의 이름으로 못 쓰게)
+  author     text not null default public.my_role()
+             check (author in ('uploader', 'rater')),
+  body       text not null check (length(btrim(body)) between 1 and 500),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists comments_meal_idx on public.comments (meal_id, created_at);
+create index if not exists comments_parent_idx on public.comments (parent_id);
+
+-- ===============================================================
 -- 4. PIN 표 — 서버에만 둔다. 클라이언트 코드에는 PIN이 없다.
 --    정책을 하나도 안 만들었으므로 anon/authenticated 모두 읽을 수 없고,
 --    아래 SECURITY DEFINER 함수만 들여다볼 수 있다.
@@ -205,6 +225,20 @@ create policy "meals insert" on public.meals
   for insert to authenticated with check (public.my_role() = 'uploader');
 create policy "meals delete" on public.meals
   for delete to authenticated using (public.my_role() = 'uploader');
+
+-- 댓글은 둘 다 읽고 쓴다. 다만 자기 이름으로만 쓰고, 자기 것만 지운다.
+alter table public.comments enable row level security;
+
+drop policy if exists "comments read"   on public.comments;
+drop policy if exists "comments insert" on public.comments;
+drop policy if exists "comments delete" on public.comments;
+
+create policy "comments read" on public.comments
+  for select to authenticated using (public.my_role() is not null);
+create policy "comments insert" on public.comments
+  for insert to authenticated with check (author = public.my_role());
+create policy "comments delete" on public.comments
+  for delete to authenticated using (author = public.my_role());
 
 -- 평가는 둘 다 보지만, 남기고 고치는 건 평가자만.
 create policy "ratings read" on public.ratings

@@ -177,14 +177,28 @@ export default async function feed(root) {
   }
 
   function actions(m) {
+    const parts = [];
+
     if (!m.rating && role === 'rater') {
-      return `<button class="btn btn-primary btn-sm" data-action="rate" data-id="${m.id}">평가하기</button>`;
+      parts.push(
+        `<button class="btn btn-primary btn-sm" data-action="open" data-id="${m.id}">평가하기</button>`,
+      );
+    } else {
+      parts.push(
+        `<button class="btn btn-ghost btn-sm" data-action="open" data-id="${m.id}">
+           💬${m.commentCount ? ` ${m.commentCount}` : ''}
+         </button>`,
+      );
     }
+
     if (role === 'uploader') {
-      return `<button class="btn btn-ghost btn-sm" data-action="share" data-id="${m.id}">공유</button>
-              <button class="btn btn-ghost btn-sm danger" data-action="delete" data-id="${m.id}">삭제</button>`;
+      parts.push(
+        `<button class="btn btn-ghost btn-sm" data-action="share" data-id="${m.id}">공유</button>`,
+        `<button class="btn btn-ghost btn-sm danger" data-action="delete" data-id="${m.id}">삭제</button>`,
+      );
     }
-    return '';
+
+    return parts.join('');
   }
 
   function openCard(m, collapsible) {
@@ -221,27 +235,31 @@ export default async function feed(root) {
 
   function slimCard(m) {
     const taken = new Date(m.taken_at);
-    const rated = m.rating
-      ? `<div class="slim-rating">
-           <span class="stars">${starText(Number(m.rating.stars))}</span>
-           <span class="stars-num">${Number(m.rating.stars).toFixed(1)}</span>
-         </div>
-         ${m.rating.comment ? `<p class="slim-comment">${esc(m.rating.comment)}</p>` : ''}`
-      : `<div class="slim-pending">아직 평가 전</div>`;
-
     const buttons = actions(m);
 
     return `
       <article class="slim">
         <div class="slim-head">
-          <div class="slim-meta">
-            <span class="pill">${MEAL_EMOJI[m.meal_type]} ${MEAL_LABEL[m.meal_type]}</span>
-            <span class="pill">${esc(formatDate(taken))} ${esc(formatTime(taken))}</span>
-          </div>
+          <span class="slim-when">
+            ${MEAL_EMOJI[m.meal_type]} ${MEAL_LABEL[m.meal_type]} ·
+            ${esc(formatDate(taken))} ${esc(formatTime(taken))}
+          </span>
           <button class="slim-open" data-toggle="${m.id}" aria-label="사진 보기">🖼️</button>
         </div>
-        <h2 class="slim-place">${place(m)}</h2>
-        ${rated}
+
+        <div class="slim-line">
+          <h2 class="slim-place">${place(m)}</h2>
+          ${
+            m.rating
+              ? `<span class="slim-rating">
+                   <span class="stars">${starText(Number(m.rating.stars))}</span>
+                   <span class="stars-num">${Number(m.rating.stars).toFixed(1)}</span>
+                 </span>`
+              : '<span class="slim-pending">평가 전</span>'
+          }
+        </div>
+
+        ${m.rating?.comment ? `<p class="slim-comment">${esc(m.rating.comment)}</p>` : ''}
         ${buttons ? `<div class="slim-actions">${buttons}</div>` : ''}
       </article>`;
   }
@@ -250,7 +268,7 @@ export default async function feed(root) {
     const meal = meals.find((m) => m.id === id);
     if (!meal) return;
 
-    if (action === 'rate') return go(`#/rate/${id}`);
+    if (action === 'open') return go(`#/rate/${id}`);
     if (action === 'share') return shareMeal(meal);
 
     if (action === 'delete') {

@@ -452,55 +452,146 @@ input:focus, select:focus {
 .slim {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 13px 14px 14px;
+  border-radius: 13px;
+  padding: 9px 12px 9px;
   display: grid;
-  gap: 6px;
-  justify-items: start;
+  gap: 3px;
 }
 
 .slim-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  width: 100%;
+  gap: 8px;
 }
 
-.slim-meta { display: flex; gap: 6px; flex-wrap: wrap; }
-
-.slim .pill { background: var(--surface-2); color: var(--ink-2); }
+.slim-when { font-size: .71rem; color: var(--ink-3); }
 
 .slim-open {
   flex: none;
   border: 1px solid var(--line);
   background: var(--surface);
-  border-radius: 9px;
-  width: 32px;
-  height: 32px;
-  font-size: .95rem;
+  border-radius: 8px;
+  width: 28px;
+  height: 28px;
+  font-size: .85rem;
   line-height: 1;
   cursor: pointer;
   transition: background .15s;
 }
 .slim-open:active { background: var(--surface-2); }
 
-.slim-place { margin: 0; font-size: 1rem; font-weight: 700; letter-spacing: -0.02em; }
-
-.slim-rating { display: flex; align-items: baseline; gap: 8px; }
-.slim-rating .stars-num { color: var(--ink); }
-
-.slim-comment {
-  margin: 1px 0 0;
-  font-size: .82rem;
-  color: var(--ink-2);
-  border-left: 2px solid var(--line);
-  padding-left: 9px;
+/* 식당 이름과 별점을 한 줄에 놓아 카드 높이를 한 줄만큼 줄인다 */
+.slim-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
 }
 
-.slim-pending { font-size: .78rem; color: var(--ink-3); }
+.slim-place {
+  margin: 0;
+  font-size: .92rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
-.slim-actions { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 4px; }
+.slim-rating { flex: none; display: flex; align-items: baseline; gap: 5px; }
+.slim-rating .stars { font-size: .82rem; letter-spacing: 1px; }
+.slim-rating .stars-num { font-size: .78rem; color: var(--ink); }
+
+.slim-pending { flex: none; font-size: .72rem; color: var(--ink-3); }
+
+.slim-comment {
+  margin: 0;
+  font-size: .78rem;
+  color: var(--ink-2);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.slim-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 3px;
+}
+.slim-actions .btn { font-size: .73rem; padding: 5px 10px; border-radius: 8px; }
+
+/* ── 댓글 스레드 ───────────────────────────────────────────── */
+
+.thread { display: grid; gap: 8px; }
+.thread-title { margin: 0; font-size: .9rem; font-weight: 700; letter-spacing: -0.01em; }
+.thread-empty { margin: 0; font-size: .82rem; color: var(--ink-3); }
+
+.cmt {
+  /* 답글이 깊어질수록 들어간다 (rate.js 가 --depth 를 박아준다) */
+  margin-left: calc(var(--depth, 0) * 14px);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 8px 11px;
+  display: grid;
+  gap: 3px;
+}
+
+.cmt-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.cmt-who { font-size: .73rem; font-weight: 700; color: var(--ink-2); }
+.cmt-when { font-size: .67rem; color: var(--ink-3); white-space: nowrap; }
+
+.cmt-body { margin: 0; font-size: .85rem; word-break: break-word; }
+
+.cmt-actions { display: flex; gap: 10px; margin-top: 1px; }
+.cmt-actions button {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: .72rem;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+.cmt-actions button.danger { color: var(--danger); }
+
+.reply { display: grid; gap: 6px; margin-top: 2px; }
+
+.reply-target {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: .74rem;
+  color: var(--ink-2);
+  background: var(--surface-2);
+  border-radius: 9px;
+  padding: 6px 10px;
+}
+.reply-target button {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: .74rem;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+
+.reply-row { display: flex; gap: 6px; align-items: stretch; }
+.reply-row input { flex: 1; min-width: 0; }
+.reply-row .btn { flex: none; }
+
+.result .btn-xs { margin-top: 8px; }
 
 /* ── 올리기 ────────────────────────────────────────────────── */
 

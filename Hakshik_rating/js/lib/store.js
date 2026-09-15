@@ -42,26 +42,32 @@ export async function deleteCafeteria(id) {
 export async function listMeals() {
   const { data, error } = await supabase
     .from('meals')
-    .select('*, cafeteria:cafeterias(*), rating:ratings(*)')
+    .select('*, cafeteria:cafeterias(*), rating:ratings(*), comments(count)')
     .order('taken_at', { ascending: false });
   if (error) throw error;
 
-  // ratings 는 1:1이지만 PostgREST가 배열로 줄 때가 있어 평탄화한다
-  return (data ?? []).map((m) => ({
+  return (data ?? []).map(flattenMeal);
+}
+
+// ratings 는 1:1이지만 PostgREST가 배열로 줄 때가 있어 평탄화한다.
+// comments(count) 는 [{count: n}] 모양으로 온다.
+function flattenMeal(m) {
+  return {
     ...m,
     rating: Array.isArray(m.rating) ? (m.rating[0] ?? null) : m.rating,
-  }));
+    commentCount: Array.isArray(m.comments) ? (m.comments[0]?.count ?? 0) : 0,
+  };
 }
 
 export async function getMeal(id) {
   const { data, error } = await supabase
     .from('meals')
-    .select('*, cafeteria:cafeterias(*), rating:ratings(*)')
+    .select('*, cafeteria:cafeterias(*), rating:ratings(*), comments(count)')
     .eq('id', id)
     .single();
   if (error) throw error;
 
-  return { ...data, rating: Array.isArray(data.rating) ? (data.rating[0] ?? null) : data.rating };
+  return flattenMeal(data);
 }
 
 export async function uploadPhoto(blob, type) {
@@ -198,4 +204,34 @@ export async function saveRating({ mealId, stars, comment }) {
     .single();
   if (error) throw error;
   return data;
+}
+
+/* ── 댓글 ─────────────────────────────────────────────────────
+   평가의 한줄평이 스레드의 뿌리다. parent_id 가 null 인 댓글은 그 한줄평에
+   직접 단 답글이고, 값이 있으면 그 답글에 다시 단 답글이다. */
+
+export async function listComments(mealId) {
+  const { data, error } = await supabase
+    .from('comments')
+    .select('*')
+    .eq('meal_id', mealId)
+    .order('created_at');
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function addComment({ mealId, parentId = null, body }) {
+  // author 는 서버가 my_role() 로 채운다 — 남의 이름으로 못 쓴다
+  const { data, error } = await supabase
+    .from('comments')
+    .insert({ meal_id: mealId, parent_id: parentId, body })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteComment(id) {
+  const { error } = await supabase.from('comments').delete().eq('id', id);
+  if (error) throw error;
 }

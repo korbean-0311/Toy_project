@@ -7,7 +7,7 @@ import {
 } from '../lib/format.js';
 import { setAppbar, toast, go } from '../ui.js';
 import { shareMeal } from '../lib/share.js';
-import { invalidateFeed } from './feed.js';
+import { invalidateMeals } from '../lib/mealcache.js';
 
 const SOURCE_LABEL = {
   exif: '사진에 찍힌 위치',
@@ -204,7 +204,7 @@ export default async function upload(root) {
         cafeteria_id: draft.cafeteriaId || null,
       });
 
-      invalidateFeed(); // 방금 올린 게 피드에 바로 보이게
+      invalidateMeals(); // 방금 올린 게 피드에 바로 보이게
       done({ ...meal, cafeteria: cafeterias.find((c) => c.id === meal.cafeteria_id) ?? null });
     } catch (err) {
       toast(err.message, { error: true });

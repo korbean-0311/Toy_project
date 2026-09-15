@@ -20,6 +20,8 @@
   **상대가 단 답글은 새로고침 없이 바로 뜬다** (Supabase Realtime).
 - **피드** — 가장 최근 기록만 사진을 펼쳐 보여주고, 지난 것들은 같은 내용을 글자로 접어둔다.
   🖼️ 를 누르면 그 기록의 사진이 펼쳐진다. `최신 / 별점 / 식당` 정렬과 식당별 필터.
+- **달력** — 피드 상단 📅 로 들어간다. 칸에는 그날 먹은 끼니 이모지만 놓고, 기록이 있는
+  날만 누를 수 있다. 누르면 달력 바로 아래에 그날 카드가 펼쳐진다.
 - **밝게 / 어둡게** — 기본은 기기 설정을 따라가고, 설정 탭에서 직접 고를 수도 있다.
 
 ## 준비
@@ -133,7 +135,9 @@ js/lib/realtime.js    댓글 실시간 구독
 js/lib/geo.js         거리 계산, 식당 매칭, 현재 위치
 js/lib/share.js       공유 시트 / 링크 복사
 js/lib/format.js      끼니 분류, 날짜·별점 표기
-js/views/             login / feed / upload / rate / settings
+js/lib/mealcache.js   피드·달력이 나눠 쓰는 기록 목록 캐시
+js/views/mealcard.js  기록 카드 (피드·달력 공용)
+js/views/             login / feed / calendar / upload / rate / settings
 manifest.webmanifest  홈 화면 추가용
 apple-touch-icon.png  iOS 홈 화면 아이콘 (iOS 는 SVG 를 안 읽는다)
 icon-192/512.png      안드로이드·데스크톱 아이콘

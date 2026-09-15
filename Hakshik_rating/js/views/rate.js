@@ -5,7 +5,7 @@ import { getRole, ROLES } from '../lib/auth.js';
 import { MEAL_LABEL, MEAL_EMOJI, formatDate, formatTime, starText, esc } from '../lib/format.js';
 import { watchComments } from '../lib/realtime.js';
 import { setAppbar, spinner, errorBox, starPicker, toast, go } from '../ui.js';
-import { invalidateFeed } from './feed.js';
+import { invalidateMeals } from '../lib/mealcache.js';
 
 // 답글이 깊어져도 화면이 좁아지지 않게 들여쓰기는 여기까지만 한다
 const MAX_INDENT = 5;
@@ -47,7 +47,7 @@ export default async function rate(root, { id }) {
       if (JSON.stringify(fresh) === JSON.stringify(comments)) return;
       comments = fresh;
       if (!comments.some((c) => c.id === replyTo)) replyTo = null;
-      invalidateFeed();
+      invalidateMeals();
       paintThread();
     } catch {
       /* 잠깐 실패해도 다음 신호에서 맞춰진다 */
@@ -233,7 +233,7 @@ export default async function rate(root, { id }) {
           });
           meal.rating = saved;
           editingRating = false;
-          invalidateFeed();
+          invalidateMeals();
           toast('평가를 남겼어요');
           render();
         } catch (err) {
@@ -267,7 +267,7 @@ export default async function rate(root, { id }) {
           await deleteComment(btn.dataset.delcmt);
           comments = await listComments(meal.id);
           if (!comments.some((c) => c.id === replyTo)) replyTo = null;
-          invalidateFeed();
+          invalidateMeals();
           paintThread();
         } catch (err) {
           toast(err.message, { error: true });
@@ -288,7 +288,7 @@ export default async function rate(root, { id }) {
         await addComment({ mealId: meal.id, parentId: replyTo, body });
         comments = await listComments(meal.id);
         replyTo = null;
-        invalidateFeed();
+        invalidateMeals();
         paintThread();
       } catch (err) {
         toast(err.message, { error: true });

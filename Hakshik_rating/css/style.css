@@ -446,6 +446,90 @@ input:focus, select:focus {
 }
 .story-actions .btn-ghost.danger { color: #ffb4ab; }
 
+/* ── 달력 ──────────────────────────────────────────────────
+   칸에는 그날 먹은 끼니 이모지만 놓는다. 기록이 있는 날만 누를 수 있다. */
+
+.icon-btn {
+  flex: none;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 9px;
+  width: 30px;
+  height: 30px;
+  font-size: .9rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background .15s;
+}
+.icon-btn:active { background: var(--surface-2); }
+
+.cal {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px 10px 14px;
+  display: grid;
+  gap: 9px;
+}
+
+.cal-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.cal-month { font-size: .92rem; font-weight: 700; letter-spacing: -0.01em; }
+
+.cal-nav {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-2);
+  border-radius: 8px;
+  width: 30px;
+  height: 30px;
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.cal-nav:active { background: var(--surface-2); }
+
+.cal-week, .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+.cal-grid { gap: 2px; }
+
+.cal-wd { text-align: center; font-size: .68rem; color: var(--ink-3); }
+.cal-wd.sun { color: var(--danger); }
+
+.cal-cell {
+  aspect-ratio: 1;
+  border: 0;
+  background: none;
+  padding: 0;
+  border-radius: 9px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  font: inherit;
+}
+
+.cal-date { font-size: .7rem; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.cal-cell.sun .cal-date { color: var(--danger); opacity: .8; }
+.cal-cell.is-blank { visibility: hidden; }
+
+.cal-cell.has {
+  cursor: pointer;
+  background: var(--surface-2);
+}
+.cal-cell.has .cal-date { color: var(--ink); font-weight: 600; }
+.cal-cell.is-today { box-shadow: inset 0 0 0 1.5px var(--accent); }
+.cal-cell.is-on { background: var(--accent); }
+.cal-cell.is-on .cal-date { color: var(--on-accent); }
+
+.cal-marks { display: flex; gap: 1px; font-size: .68rem; line-height: 1; }
+.cal-marks i { font-style: normal; }
+
+.cal-hint { margin: 0; font-size: .8rem; color: var(--ink-3); text-align: center; padding: 6px 0; }
+
+.cal-day { display: grid; gap: 9px; }
+.cal-day-title { margin: 0; font-size: .9rem; font-weight: 700; letter-spacing: -0.01em; }
+.cal-day .stories { padding: 0; gap: 10px; }
+
 /* ── 접힌 기록 ─────────────────────────────────────────────
    사진은 가장 최근 것만 펼쳐두고, 지난 것들은 같은 내용을 글자로만 보여준다. */
 

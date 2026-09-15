@@ -20,6 +20,7 @@ const TABS = [
 const ROUTES = [
   { match: /^#\/login$/, load: () => import('./views/login.js'), open: true },
   { match: /^#\/?$/, load: () => import('./views/feed.js') },
+  { match: /^#\/calendar$/, load: () => import('./views/calendar.js') },
   { match: /^#\/upload$/, load: () => import('./views/upload.js'), role: 'uploader' },
   {
     match: /^#\/rate\/([\w-]+)$/,
@@ -104,6 +105,7 @@ function preloadViews() {
   const idle = window.requestIdleCallback ?? ((fn) => setTimeout(fn, 1500));
   idle(() => {
     import('./views/settings.js');
+    import('./views/calendar.js');
     if (getRole() === 'uploader') import('./views/upload.js');
     else import('./views/rate.js');
   });
@@ -129,7 +131,10 @@ function paintTabs(hash, role) {
 }
 
 function isActive(hash, tabHash) {
-  if (tabHash === '#/') return hash === '#/' || hash === '#' || hash === '';
+  // 달력과 기록 상세는 피드에서 들어가는 곳이라 피드 탭을 켜둔 채로 둔다
+  if (tabHash === '#/') {
+    return ['#/', '#', '', '#/calendar'].includes(hash) || hash.startsWith('#/rate/');
+  }
   return hash.startsWith(tabHash);
 }
 

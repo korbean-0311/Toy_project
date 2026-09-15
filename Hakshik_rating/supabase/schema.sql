@@ -251,6 +251,20 @@ create policy "ratings update" on public.ratings
   with check (public.my_role() = 'rater');
 
 -- ===============================================================
+-- 6-1. 댓글 실시간 — 상대가 답글을 달면 새로고침 없이 뜨게 한다.
+--      publication 에 넣어야 변경이 밖으로 나가고, replica identity full 이어야
+--      삭제 이벤트에도 어느 행이었는지가 실려서 RLS 판정이 된다.
+-- ===============================================================
+alter table public.comments replica identity full;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.comments;
+exception
+  when duplicate_object then null;  -- 이미 들어 있으면 그만
+end $$;
+
+-- ===============================================================
 -- 7. 사진 버킷 — 비공개. 앱은 만료되는 서명 URL로만 읽는다.
 -- ===============================================================
 insert into storage.buckets (id, name, public)

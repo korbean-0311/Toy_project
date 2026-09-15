@@ -3,6 +3,7 @@ import {
 } from '../lib/store.js';
 import { getRole, ROLES } from '../lib/auth.js';
 import { MEAL_LABEL, MEAL_EMOJI, formatDate, formatTime, starText, esc } from '../lib/format.js';
+import { watchComments } from '../lib/realtime.js';
 import { setAppbar, spinner, errorBox, starPicker, toast, go } from '../ui.js';
 import { invalidateFeed } from './feed.js';
 
@@ -38,6 +39,23 @@ export default async function rate(root, { id }) {
 
   render();
 
+  // 상대가 답글을 달면 바로 뜨게 한다. 별점 폼을 쓰는 중일 수 있으니
+  // 화면 전체가 아니라 댓글 부분만 다시 그린다.
+  const unwatch = watchComments(meal.id, async () => {
+    try {
+      const fresh = await listComments(meal.id);
+      if (JSON.stringify(fresh) === JSON.stringify(comments)) return;
+      comments = fresh;
+      if (!comments.some((c) => c.id === replyTo)) replyTo = null;
+      invalidateFeed();
+      paintThread();
+    } catch {
+      /* 잠깐 실패해도 다음 신호에서 맞춰진다 */
+    }
+  });
+
+  return unwatch;
+
   function render() {
     const taken = new Date(meal.taken_at);
     const place = meal.cafeteria
@@ -62,7 +80,25 @@ export default async function rate(root, { id }) {
         <div id="threadBlock">${threadBlock()}</div>
       </div>`;
 
-    bind();
+    bindRating();
+    bindThread();
+  }
+
+  /** 댓글 부분만 다시 그린다. 쓰던 답글은 날리지 않는다. */
+  function paintThread() {
+    const host = root.querySelector('#threadBlock');
+    if (!host) return;
+
+    const typing = root.querySelector('#replyBody');
+    const draft = typing?.value ?? '';
+    const hadFocus = document.activeElement === typing;
+
+    host.innerHTML = threadBlock();
+    bindThread();
+
+    const next = root.querySelector('#replyBody');
+    if (next && draft) next.value = draft;
+    if (next && hadFocus) next.focus();
   }
 
   function ratingBlock() {
@@ -164,7 +200,7 @@ export default async function rate(root, { id }) {
     return text.length > 14 ? `${text.slice(0, 14)}…` : text;
   }
 
-  function bind() {
+  function bindRating() {
     root.querySelector('#editRating')?.addEventListener('click', () => {
       editingRating = true;
       render();
@@ -208,17 +244,20 @@ export default async function rate(root, { id }) {
       });
     }
 
+  }
+
+  function bindThread() {
     root.querySelectorAll('[data-reply]').forEach((btn) => {
       btn.addEventListener('click', () => {
         replyTo = btn.dataset.reply;
-        render();
+        paintThread();
         root.querySelector('#replyBody')?.focus();
       });
     });
 
     root.querySelector('#cancelReply')?.addEventListener('click', () => {
       replyTo = null;
-      render();
+      paintThread();
     });
 
     root.querySelectorAll('[data-delcmt]').forEach((btn) => {
@@ -229,7 +268,7 @@ export default async function rate(root, { id }) {
           comments = await listComments(meal.id);
           if (!comments.some((c) => c.id === replyTo)) replyTo = null;
           invalidateFeed();
-          render();
+          paintThread();
         } catch (err) {
           toast(err.message, { error: true });
         }
@@ -250,7 +289,7 @@ export default async function rate(root, { id }) {
         comments = await listComments(meal.id);
         replyTo = null;
         invalidateFeed();
-        render();
+        paintThread();
       } catch (err) {
         toast(err.message, { error: true });
         btn.disabled = false;

@@ -6,6 +6,9 @@ import { setAppbar, spinner } from './ui.js';
 const screen = document.getElementById('screen');
 const tabbar = document.getElementById('tabbar');
 
+// 지금 화면이 떠날 때 불러야 할 정리 함수 (예: 댓글 실시간 구독 해제)
+let cleanup = null;
+
 const TABS = [
   { hash: '#/', label: '피드', emoji: '🍚' },
   { hash: '#/upload', label: '올리기', emoji: '📸', role: 'uploader' },
@@ -74,10 +77,22 @@ async function render() {
   paintTabs(hash, role);
   screen.scrollTop = 0;
 
+  // 앞 화면이 붙여둔 것(실시간 구독 등)을 먼저 떼어낸다
+  if (cleanup) {
+    try {
+      cleanup();
+    } catch (err) {
+      console.warn('화면 정리 중 오류:', err);
+    }
+    cleanup = null;
+  }
+
   const params = route.params?.(hash.match(route.match)) ?? {};
   try {
     const { default: view } = await route.load();
-    await view(screen, params);
+    // 화면이 함수를 돌려주면 떠날 때 불러줄 정리 함수로 본다
+    const teardown = await view(screen, params);
+    if (typeof teardown === 'function') cleanup = teardown;
   } catch (err) {
     console.error(err);
     screen.innerHTML = `<div class="notice is-error"><b>화면을 그리지 못했어요</b><span>${err.message}</span></div>`;

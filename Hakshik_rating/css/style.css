@@ -230,6 +230,37 @@ body {
   font-weight: 600;
 }
 
+/* 식당 고르기 드롭다운.
+   보이는 건 칩 모양 라벨이고, 그 위에 투명한 네이티브 select 를 덮어뒀다.
+   select 는 가장 긴 항목 기준으로 폭이 잡혀서 라벨이 글자에 안 붙는데, 이렇게 하면
+   라벨은 글자에 딱 붙고 누르면 폰의 기본 선택기가 그대로 뜬다. */
+.chip-wrap { position: relative; display: inline-flex; flex: none; }
+
+.chip-face { display: inline-flex; align-items: center; gap: 6px; }
+
+.chip-wrap.is-on .chip-face {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+}
+
+.chip-caret { font-size: .58rem; font-style: normal; opacity: .75; }
+
+.chip-native {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  background: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
 .btn {
   border: 1px solid transparent;
   font: inherit;

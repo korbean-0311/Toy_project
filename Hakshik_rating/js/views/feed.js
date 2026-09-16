@@ -5,9 +5,9 @@ import { openCard, slimCard, bindCards } from './mealcard.js';
 import { setAppbar, spinner, errorBox, toast, go } from '../ui.js';
 
 const SORTS = {
-  recent: { label: '최신', apply: (a, b) => new Date(b.taken_at) - new Date(a.taken_at) },
+  recent: { label: '최신순', apply: (a, b) => new Date(b.taken_at) - new Date(a.taken_at) },
   stars: {
-    label: '별점',
+    label: '별점순',
     apply: (a, b) => (b.rating?.stars ?? -1) - (a.rating?.stars ?? -1),
   },
 };
@@ -59,6 +59,14 @@ export default async function feed(root) {
     const btn = e.target.closest('[data-place]');
     if (!btn) return;
     placeFilter = btn.dataset.place;
+    renderChips();
+    paint();
+  });
+
+  placeRow.addEventListener('change', (e) => {
+    if (e.target.id !== 'placeSel') return;
+    placeFilter = e.target.value || 'all';
+    renderChips();
     paint();
   });
 
@@ -89,25 +97,32 @@ export default async function feed(root) {
     );
     if (placeFilter !== 'all' && !places.includes(placeFilter)) placeFilter = 'all';
 
+    // 식당이 늘어나면 칩이 줄줄이 늘어서 가로로 넘친다. 고르는 건 드롭다운에 맡긴다.
+    const picked = placeFilter !== 'all';
+
     placeRow.innerHTML = places.length
       ? `<div class="chips">
-           <button type="button" class="chip ${placeFilter === 'all' ? 'is-on' : ''}" data-place="all">전체</button>
-           ${places
-             .map(
-               (p) =>
-                 `<button type="button" class="chip ${placeFilter === p ? 'is-on' : ''}"
-                          data-place="${esc(p)}">${esc(p)}</button>`,
-             )
-             .join('')}
+           <button type="button" class="chip ${picked ? '' : 'is-on'}" data-place="all">전체</button>
+           <span class="chip-wrap ${picked ? 'is-on' : ''}">
+             <span class="chip chip-face">
+               ${picked ? esc(placeFilter) : '식당 선택'}
+               <i class="chip-caret" aria-hidden="true">▾</i>
+             </span>
+             <select class="chip-native" id="placeSel" aria-label="식당 고르기">
+               <option value="">식당 선택</option>
+               ${places
+                 .map(
+                   (p) =>
+                     `<option value="${esc(p)}" ${p === placeFilter ? 'selected' : ''}>${esc(p)}</option>`,
+                 )
+                 .join('')}
+             </select>
+           </span>
          </div>`
       : '';
   }
 
   function paint() {
-    placeRow.querySelectorAll('[data-place]').forEach((b) => {
-      b.classList.toggle('is-on', b.dataset.place === placeFilter);
-    });
-
     const shown = meals
       .filter((m) => placeFilter === 'all' || m.cafeteria?.name === placeFilter)
       .sort(SORTS[sortKey].apply);

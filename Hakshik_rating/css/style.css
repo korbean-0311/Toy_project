@@ -440,9 +440,35 @@ input:focus, select:focus {
   text-shadow: 0 1px 8px rgba(0, 0, 0, .4);
 }
 
-.story-rating { display: flex; align-items: baseline; gap: 8px; }
-.stars { color: var(--star); font-size: 1rem; letter-spacing: 2px; }
+.story-rating { display: flex; align-items: center; gap: 8px; }
+.stars { font-size: 1rem; }
 .stars-num { font-size: .84rem; font-weight: 700; }
+
+/* 별 다섯 개를 그리되, 반 점은 별 하나를 너비로 잘라서 절반만 칠한다.
+   별마다 따로 칠하므로 자간이 있어도 잘리는 위치가 어긋나지 않는다. */
+.starbar {
+  display: inline-flex;
+  gap: 1px;
+  line-height: 1;
+  vertical-align: middle;
+}
+.starbar-item {
+  position: relative;
+  color: var(--star-off);
+}
+.starbar-item::before { content: '★'; }
+.starbar-item > i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  overflow: hidden;
+  color: var(--star);
+  font-style: normal;
+}
+.starbar-item > i::before { content: '★'; }
+
+/* 사진 위에서는 빈 별이 흐릿하게 비쳐야 한다 (--star-off 는 밝은 배경 기준이라 안 맞는다) */
+.story .starbar-item { color: rgba(255, 255, 255, .38); }
 
 .story-comment {
   margin: 0;
@@ -616,8 +642,8 @@ input:focus, select:focus {
   text-overflow: ellipsis;
 }
 
-.slim-rating { flex: none; display: flex; align-items: baseline; gap: 5px; }
-.slim-rating .stars { font-size: .82rem; letter-spacing: 1px; }
+.slim-rating { flex: none; display: flex; align-items: center; gap: 5px; }
+.slim-rating .stars { font-size: .82rem; }
 .slim-rating .stars-num { font-size: .78rem; color: var(--ink); }
 
 .slim-pending { flex: none; font-size: .72rem; color: var(--ink-3); }
@@ -816,7 +842,7 @@ input:focus, select:focus {
   border-radius: var(--radius);
   padding: 22px 16px;
 }
-.result-stars { font-size: 1.7rem; color: var(--star); letter-spacing: 3px; }
+.result-stars { font-size: 1.7rem; gap: 3px; }
 .result-num { font-size: .86rem; font-weight: 700; }
 .result-comment {
   margin: 8px 0 0;

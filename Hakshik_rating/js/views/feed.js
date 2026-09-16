@@ -10,15 +10,11 @@ const SORTS = {
     label: '별점',
     apply: (a, b) => (b.rating?.stars ?? -1) - (a.rating?.stars ?? -1),
   },
-  place: {
-    label: '식당',
-    apply: (a, b) =>
-      (a.cafeteria?.name ?? 'ㅎ힣').localeCompare(b.cafeteria?.name ?? 'ㅎ힣', 'ko') ||
-      new Date(b.taken_at) - new Date(a.taken_at),
-  },
 };
 
-let sortKey = localStorage.getItem('hakshik.sort') || 'recent';
+// 예전에 없앤 '식당' 정렬이 저장돼 있을 수 있으므로 걸러낸다
+const savedSort = localStorage.getItem('hakshik.sort');
+let sortKey = Object.hasOwn(SORTS, savedSort ?? '') ? savedSort : 'recent';
 let placeFilter = 'all';
 
 // 사진은 가장 최근 기록만 펼쳐두고 나머지는 접는다. 여기 담긴 건 사용자가 직접 펼친 것들.
@@ -31,7 +27,6 @@ export default async function feed(root) {
   setAppbar(`
     <div class="appbar-row">
       <span class="brand">🍚 자기는 뭘 먹을까?</span>
-      <button class="icon-btn" id="calBtn" aria-label="달력으로 보기">📅</button>
       <div class="seg" id="sortSeg">
         ${Object.entries(SORTS)
           .map(
@@ -41,6 +36,7 @@ export default async function feed(root) {
           )
           .join('')}
       </div>
+      <button class="icon-btn" id="calBtn" aria-label="달력으로 보기">📅</button>
     </div>
     <div class="appbar-row" id="placeRow"></div>`);
 

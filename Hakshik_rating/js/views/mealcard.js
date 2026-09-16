@@ -3,7 +3,7 @@
 // 펼친 카드(사진 위에 글자)와 접힌 카드(글자만)는 내용이 같고 담는 그릇만 다르다.
 // 클릭 처리는 쓰는 쪽에서 data-action / data-toggle 로 받아간다.
 
-import { MEAL_LABEL, MEAL_EMOJI, formatDate, formatTime, starText, esc } from '../lib/format.js';
+import { MEAL_LABEL, MEAL_EMOJI, formatDate, formatTime, starBar, esc } from '../lib/format.js';
 import { deleteMeal } from '../lib/store.js';
 import { shareMeal } from '../lib/share.js';
 import { toast, go } from '../ui.js';
@@ -48,7 +48,7 @@ export function openCard(m, { role, collapsible = false, eager = false } = {}) {
   const taken = new Date(m.taken_at);
   const rated = m.rating
     ? `<div class="story-rating">
-         <span class="stars">${starText(Number(m.rating.stars))}</span>
+         ${starBar(m.rating.stars)}
          <span class="stars-num">${Number(m.rating.stars).toFixed(1)}</span>
        </div>
        ${m.rating.comment ? `<p class="story-comment">${esc(m.rating.comment)}</p>` : ''}`
@@ -95,7 +95,7 @@ export function slimCard(m, { role } = {}) {
         ${
           m.rating
             ? `<span class="slim-rating">
-                 <span class="stars">${starText(Number(m.rating.stars))}</span>
+                 ${starBar(m.rating.stars)}
                  <span class="stars-num">${Number(m.rating.stars).toFixed(1)}</span>
                </span>`
             : '<span class="slim-pending">평가 전</span>'

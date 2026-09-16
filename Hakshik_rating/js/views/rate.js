@@ -2,7 +2,7 @@ import {
   getMeal, signedUrl, saveRating, listComments, addComment, deleteComment,
 } from '../lib/store.js';
 import { getRole, ROLES } from '../lib/auth.js';
-import { MEAL_LABEL, MEAL_EMOJI, formatDate, formatTime, starText, esc } from '../lib/format.js';
+import { MEAL_LABEL, MEAL_EMOJI, formatDate, formatTime, starBar, esc } from '../lib/format.js';
 import { watchComments } from '../lib/realtime.js';
 import { setAppbar, spinner, errorBox, starPicker, toast, go } from '../ui.js';
 import { invalidateMeals, peekMeals } from '../lib/mealcache.js';
@@ -138,7 +138,7 @@ export default async function rate(root, { id }) {
 
     return `
       <div class="result">
-        <div class="result-stars">${starText(Number(meal.rating.stars))}</div>
+        ${starBar(meal.rating.stars, 'result-stars')}
         <div class="result-num">${Number(meal.rating.stars).toFixed(1)}점</div>
         ${meal.rating.comment ? `<p class="result-comment">${esc(meal.rating.comment)}</p>` : ''}
         ${role === 'rater' ? '<button class="btn btn-ghost btn-xs" id="editRating">평가 수정</button>' : ''}

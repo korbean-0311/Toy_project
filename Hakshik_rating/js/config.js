@@ -11,14 +11,16 @@ export const SUPABASE_ANON_KEY = 'sb_publishable_9PaMPeCvBzlEo0Yw-kjdCg_iRHhkRTz
 
 // 배포할 때마다 올린다. 설정 화면에 그대로 찍히므로, 폰이 새 버전을 받았는지
 // 눈으로 바로 확인할 수 있다 (GitHub Pages 가 파일을 10분간 캐시한다).
-export const APP_VERSION = '2026-09-15.3';
+export const APP_VERSION = '2026-09-16.1';
 
 export const BUCKET = 'meal-photos';
 
 // 사진 서명 URL 유효시간 (초). 버킷이 비공개라 이걸로만 읽는다.
-// 피드 이미지는 lazy 로딩이라, 앱을 켜둔 채 한참 뒤에 스크롤하면 그때 URL을 쓴다.
-// 너무 짧으면 그 사진이 깨지므로 넉넉히 잡는다.
-export const SIGNED_URL_TTL = 4 * 60 * 60;
+//
+// 이 값이 곧 '사진 캐시 수명'이다. 서명할 때마다 토큰이 달라져서 URL 이 바뀌는데,
+// URL 이 바뀌면 브라우저는 처음 보는 사진으로 여기고 통째로 다시 받는다.
+// 4시간으로 뒀더니 하루에도 몇 번씩 다시 받게 돼서 일주일로 늘렸다.
+export const SIGNED_URL_TTL = 7 * 24 * 60 * 60;
 
 // 업로드 전 리사이즈 기준 (긴 변 픽셀, JPEG 품질).
 // 폰 원본은 4000px 넘고 3~5MB라 그대로 올리면 느리고 용량만 먹는다.

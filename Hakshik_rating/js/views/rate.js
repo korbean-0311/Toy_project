@@ -5,7 +5,7 @@ import { getRole, ROLES } from '../lib/auth.js';
 import { MEAL_LABEL, MEAL_EMOJI, formatDate, formatTime, starText, esc } from '../lib/format.js';
 import { watchComments } from '../lib/realtime.js';
 import { setAppbar, spinner, errorBox, starPicker, toast, go } from '../ui.js';
-import { invalidateMeals } from '../lib/mealcache.js';
+import { invalidateMeals, peekMeals } from '../lib/mealcache.js';
 
 // 답글이 깊어져도 화면이 좁아지지 않게 들여쓰기는 여기까지만 한다
 const MAX_INDENT = 5;
@@ -20,24 +20,38 @@ export default async function rate(root, { id }) {
     </div>`);
   document.getElementById('backBtn').addEventListener('click', () => go('#/'));
 
-  root.innerHTML = spinner();
+  // 피드나 달력이 이미 받아둔 기록이면 그걸로 먼저 그린다. 사진 URL 까지 들어 있어서
+  // 왕복을 기다리지 않고 사진이 바로 뜬다. 최신 내용은 아래에서 받아 갈아끼운다.
+  const known = (peekMeals() ?? []).find((m) => m.id === id) ?? null;
 
-  let meal;
-  let photo;
+  let meal = known;
+  let photo = known?.url ?? '';
   let comments = [];
-  try {
-    meal = await getMeal(id);
-    [photo, comments] = await Promise.all([signedUrl(meal.photo_path), listComments(id)]);
-  } catch {
-    root.innerHTML = errorBox('그 기록을 찾을 수 없어요. 지워졌을 수도 있어요.');
-    return;
-  }
-
-  // 평가자가 '수정'을 눌렀을 때만 별점 폼을 편다
-  let editingRating = role === 'rater' && !meal.rating;
+  let editingRating = false;
+  let ratingTouched = false; // 사용자가 폼을 직접 여닫았으면 갱신이 건드리지 않는다
   let replyTo = null; // null 이면 한줄평(스레드 뿌리)에 다는 답글
 
-  render();
+  if (meal) {
+    editingRating = role === 'rater' && !meal.rating;
+    render();
+  } else {
+    root.innerHTML = spinner();
+  }
+
+  try {
+    const [fresh, freshComments] = await Promise.all([getMeal(id), listComments(id)]);
+    if (!photo || fresh.photo_path !== meal?.photo_path) photo = await signedUrl(fresh.photo_path);
+    meal = fresh;
+    comments = freshComments;
+    if (!ratingTouched) editingRating = role === 'rater' && !meal.rating;
+    render();
+  } catch {
+    if (!meal) {
+      root.innerHTML = errorBox('그 기록을 찾을 수 없어요. 지워졌을 수도 있어요.');
+      return;
+    }
+    toast('새로 불러오지 못했어요', { error: true });
+  }
 
   // 상대가 답글을 달면 바로 뜨게 한다. 별점 폼을 쓰는 중일 수 있으니
   // 화면 전체가 아니라 댓글 부분만 다시 그린다.
@@ -65,7 +79,7 @@ export default async function rate(root, { id }) {
     root.innerHTML = `
       <div class="pad">
         <figure class="preview">
-          <img src="${esc(photo)}" alt="학식 사진" />
+          <img src="${esc(photo)}" alt="학식 사진" fetchpriority="high" decoding="async" />
         </figure>
 
         <div class="head">
@@ -203,11 +217,13 @@ export default async function rate(root, { id }) {
   function bindRating() {
     root.querySelector('#editRating')?.addEventListener('click', () => {
       editingRating = true;
+      ratingTouched = true;
       render();
     });
 
     root.querySelector('#cancelRating')?.addEventListener('click', () => {
       editingRating = false;
+      ratingTouched = true;
       render();
     });
 

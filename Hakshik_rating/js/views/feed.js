@@ -138,7 +138,7 @@ export default async function feed(root) {
     root.innerHTML = `<div class="stories">${shown
       .map((m) =>
         m.id === latestId || expanded.has(m.id)
-          ? openCard(m, { role, collapsible: m.id !== latestId })
+          ? openCard(m, { role, collapsible: m.id !== latestId, eager: m.id === latestId })
           : slimCard(m, { role }),
       )
       .join('')}</div>`;

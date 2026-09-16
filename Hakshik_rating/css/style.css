@@ -449,13 +449,18 @@ input:focus, select:focus {
 /* ── 달력 ──────────────────────────────────────────────────
    칸에는 그날 먹은 끼니 이모지만 놓는다. 기록이 있는 날만 누를 수 있다. */
 
+/* 이모지는 baseline 에 앉아서 가만 두면 칸 아래쪽으로 쏠린다. flex 로 가운데에 박는다. */
 .icon-btn {
   flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--line);
   background: var(--surface);
   border-radius: 9px;
   width: 30px;
   height: 30px;
+  padding: 0;
   font-size: .9rem;
   line-height: 1;
   cursor: pointer;
@@ -476,12 +481,16 @@ input:focus, select:focus {
 .cal-month { font-size: .92rem; font-weight: 700; letter-spacing: -0.01em; }
 
 .cal-nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--line);
   background: var(--surface);
   color: var(--ink-2);
   border-radius: 8px;
   width: 30px;
   height: 30px;
+  padding: 0;
   font-size: 1.15rem;
   line-height: 1;
   cursor: pointer;
@@ -553,11 +562,15 @@ input:focus, select:focus {
 
 .slim-open {
   flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--line);
   background: var(--surface);
   border-radius: 8px;
   width: 28px;
   height: 28px;
+  padding: 0;
   font-size: .85rem;
   line-height: 1;
   cursor: pointer;

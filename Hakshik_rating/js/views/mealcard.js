@@ -39,8 +39,12 @@ export function cardActions(m, role) {
   return parts.join('');
 }
 
-/** 사진이 보이는 카드. collapsible 이면 '접기' 버튼이 붙는다. */
-export function openCard(m, { role, collapsible = false } = {}) {
+/**
+ * 사진이 보이는 카드.
+ * @param {boolean} [o.collapsible] '접기' 버튼을 붙인다
+ * @param {boolean} [o.eager] 화면에 바로 보이는 카드 — lazy 를 걸면 받기 시작이 늦어진다
+ */
+export function openCard(m, { role, collapsible = false, eager = false } = {}) {
   const taken = new Date(m.taken_at);
   const rated = m.rating
     ? `<div class="story-rating">
@@ -56,7 +60,8 @@ export function openCard(m, { role, collapsible = false } = {}) {
 
   return `
     <article class="story">
-      <img class="story-img" src="${esc(m.url)}" alt="" loading="lazy" />
+      <img class="story-img" src="${esc(m.url)}" alt=""
+           ${eager ? 'fetchpriority="high" decoding="async"' : 'loading="lazy" decoding="async"'} />
       <div class="story-veil"></div>
       <div class="story-body">
         <div class="story-meta">

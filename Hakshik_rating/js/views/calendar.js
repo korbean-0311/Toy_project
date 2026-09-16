@@ -157,7 +157,9 @@ export default async function calendar(root) {
     return `
       <div class="cal-day">
         <h2 class="cal-day-title">${m}월 ${d}일 (${weekday})</h2>
-        <div class="stories">${list.map((meal) => openCard(meal, { role })).join('')}</div>
+        <div class="stories">${list
+          .map((meal, i) => openCard(meal, { role, eager: i === 0 }))
+          .join('')}</div>
       </div>`;
   }
 

@@ -6,7 +6,7 @@ export function mealTypeOf(date) {
 }
 
 export const MEAL_LABEL = { lunch: '점심', dinner: '저녁' };
-export const MEAL_EMOJI = { lunch: '🌤️', dinner: '🌙' };
+export const MEAL_EMOJI = { lunch: '☀️', dinner: '🌙' };
 
 export function formatDate(value) {
   const d = value instanceof Date ? value : new Date(value);

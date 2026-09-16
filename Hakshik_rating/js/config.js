@@ -11,7 +11,7 @@ export const SUPABASE_ANON_KEY = 'sb_publishable_9PaMPeCvBzlEo0Yw-kjdCg_iRHhkRTz
 
 // 배포할 때마다 올린다. 설정 화면에 그대로 찍히므로, 폰이 새 버전을 받았는지
 // 눈으로 바로 확인할 수 있다 (GitHub Pages 가 파일을 10분간 캐시한다).
-export const APP_VERSION = '2026-09-16.7';
+export const APP_VERSION = '2026-09-16.8';
 
 export const BUCKET = 'meal-photos';
 

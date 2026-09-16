@@ -115,10 +115,22 @@ body {
   align-items: center;
   gap: 10px;
   min-height: 30px;
+  /* grid 자식은 기본 min-width 가 auto 라서 내용보다 작아지지 못한다.
+     이게 걸려 있으면 좁은 화면에서 이름이 안 줄고 버튼이 화면 밖으로 밀린다. */
+  min-width: 0;
 }
 .appbar-row:empty { display: none; }
 
-.brand { font-size: 1rem; font-weight: 700; letter-spacing: -0.02em; }
+/* 앱 이름이 길어도 옆 버튼들을 밀어내지 않게. 좁은 화면에선 이름이 줄어든다. */
+.brand {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .back {
   border: 0;
@@ -167,6 +179,7 @@ body {
 
 .seg {
   display: flex;
+  flex: none;
   gap: 2px;
   background: var(--surface-2);
   border-radius: 10px;
@@ -336,7 +349,13 @@ input:focus, select:focus {
   padding: 0 28px;
   text-align: center;
 }
-.gate-mark { font-size: 3rem; }
+.gate-mark {
+  width: 96px;
+  height: 96px;
+  border-radius: 22px;
+  border: 1px solid var(--line);
+  display: block;
+}
 .gate-title { margin: 2px 0 0; font-size: 1.35rem; letter-spacing: -0.03em; }
 .gate-sub { margin: 0 0 18px; font-size: .84rem; color: var(--ink-2); }
 .gate-form { width: 100%; display: grid; gap: 10px; }

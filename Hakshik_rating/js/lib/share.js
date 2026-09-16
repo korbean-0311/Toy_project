@@ -18,7 +18,7 @@ export async function shareMeal(meal) {
 
   if (navigator.share) {
     try {
-      await navigator.share({ title: '학식 평점', text, url });
+      await navigator.share({ title: '자기는 뭘 먹을까?', text, url });
       return;
     } catch (err) {
       if (err.name === 'AbortError') return; // 사용자가 취소

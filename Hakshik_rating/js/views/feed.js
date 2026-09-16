@@ -30,7 +30,7 @@ export default async function feed(root) {
 
   setAppbar(`
     <div class="appbar-row">
-      <span class="brand">🍚 학식 평점</span>
+      <span class="brand">🍚 자기는 뭘 먹을까?</span>
       <button class="icon-btn" id="calBtn" aria-label="달력으로 보기">📅</button>
       <div class="seg" id="sortSeg">
         ${Object.entries(SORTS)

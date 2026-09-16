@@ -6,8 +6,8 @@ export default function login(root) {
 
   root.innerHTML = `
     <div class="gate">
-      <div class="gate-mark">🍚</div>
-      <h1 class="gate-title">학식 평점</h1>
+      <img class="gate-mark" src="icon-192.png" alt="" width="96" height="96" />
+      <h1 class="gate-title">자기는 뭘 먹을까?</h1>
       <p class="gate-sub">PIN을 넣으면 이 기기가 그 역할을 가져가요.<br />역할당 한 기기만 쓸 수 있어요.</p>
 
       <form class="gate-form" id="pinForm">

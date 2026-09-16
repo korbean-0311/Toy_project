@@ -139,7 +139,9 @@ js/lib/mealcache.js   피드·달력이 나눠 쓰는 기록 목록 캐시
 js/views/mealcard.js  기록 카드 (피드·달력 공용)
 js/views/             login / feed / calendar / upload / rate / settings
 manifest.webmanifest  홈 화면 추가용
-apple-touch-icon.png  iOS 홈 화면 아이콘 (iOS 는 SVG 를 안 읽는다)
-icon-192/512.png      안드로이드·데스크톱 아이콘
+icon-source.png       아이콘 원본 (여기서 아래 크기들을 뽑는다)
+apple-touch-icon.png  iOS 홈 화면 아이콘 180px (iOS 는 SVG 를 안 읽는다)
+icon-32/192/512.png   파비콘·안드로이드·데스크톱 아이콘
+icon-512-maskable.png 안드로이드 적응형 아이콘 (모서리가 깎이므로 여백을 더 뒀다)
 supabase/schema.sql   테이블 + RLS + 버킷 (cafeterias / meals / ratings / comments)
 ```

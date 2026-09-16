@@ -89,7 +89,9 @@ export function openCard(m, { role, collapsible = false, eager = false } = {}) {
 /** 사진을 접고 글자만 남긴 카드. */
 export function slimCard(m, { role } = {}) {
   const taken = new Date(m.taken_at);
-  const buttons = cardActions(m, role);
+  const buttons =
+    cardActions(m, role) +
+    `<button class="btn btn-ghost btn-sm" data-toggle="${m.id}">펼치기</button>`;
 
   return `
     <article class="slim">
@@ -98,7 +100,6 @@ export function slimCard(m, { role } = {}) {
           ${MEAL_EMOJI[m.meal_type]} ${MEAL_LABEL[m.meal_type]} ·
           ${esc(formatDate(taken))} ${esc(formatTime(taken))}
         </span>
-        <button class="slim-open" data-toggle="${m.id}" aria-label="사진 보기">🖼️</button>
       </div>
 
       <div class="slim-line">

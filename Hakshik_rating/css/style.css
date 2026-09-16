@@ -640,32 +640,9 @@ input:focus, select:focus {
   gap: 3px;
 }
 
-.slim-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
+.slim-head { display: flex; align-items: center; }
 
 .slim-when { font-size: .71rem; color: var(--ink-3); }
-
-.slim-open {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  border-radius: 8px;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  font-size: .85rem;
-  line-height: 1;
-  cursor: pointer;
-  transition: background .15s;
-}
-.slim-open:active { background: var(--surface-2); }
 
 /* 식당 이름과 별점을 한 줄에 놓아 카드 높이를 한 줄만큼 줄인다 */
 .slim-line {

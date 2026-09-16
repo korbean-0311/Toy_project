@@ -424,7 +424,8 @@ input:focus, select:focus {
 
 .story {
   position: relative;
-  aspect-ratio: 4 / 5;
+  /* 사진 비율을 그대로 쓴다. 크기를 모르는 예전 기록만 4:5 로 본다. */
+  aspect-ratio: var(--ar, 4 / 5);
   border-radius: var(--radius);
   overflow: hidden;
   background: #17150f;
@@ -792,7 +793,13 @@ input:focus, select:focus {
   overflow: hidden;
   background: var(--surface-2);
 }
-.preview img { width: 100%; display: block; max-height: 52dvh; object-fit: cover; }
+.preview img {
+  width: 100%;
+  display: block;
+  /* 비율을 알면 그대로, 모르면 사진이 스스로 잡는 크기대로 (어느 쪽이든 안 잘린다) */
+  aspect-ratio: var(--ar, auto);
+  object-fit: cover;
+}
 
 .facts {
   margin: 0;

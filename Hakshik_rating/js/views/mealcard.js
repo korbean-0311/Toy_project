@@ -8,6 +8,17 @@ import { deleteMeal } from '../lib/store.js';
 import { shareMeal } from '../lib/share.js';
 import { toast, go } from '../ui.js';
 
+/**
+ * 카드가 사진 비율을 그대로 따라가게 한다. 고정 비율에 맞춰 자르면 가로 사진이
+ * 좌우로 크게 잘려나간다. 크기를 모르는 예전 기록은 CSS 기본값(4:5)으로 둔다.
+ */
+export function aspectStyle(m) {
+  if (!m.photo_w || !m.photo_h) return '';
+  // 지나치게 길쭉한 사진이 화면을 다 잡아먹지 않게만 가둔다 (폰 사진은 여기 안 걸린다)
+  const ratio = Math.min(1.9, Math.max(0.55, m.photo_w / m.photo_h));
+  return ` style="--ar:${ratio.toFixed(4)}"`;
+}
+
 export function placeOf(m) {
   return m.cafeteria
     ? `${esc(m.cafeteria.name)}${m.cafeteria.building ? ` · ${esc(m.cafeteria.building)}` : ''}`
@@ -59,7 +70,7 @@ export function openCard(m, { role, collapsible = false, eager = false } = {}) {
     (collapsible ? `<button class="btn btn-ghost btn-sm" data-toggle="${m.id}">접기</button>` : '');
 
   return `
-    <article class="story">
+    <article class="story"${aspectStyle(m)}>
       <img class="story-img" src="${esc(m.url)}" alt=""
            ${eager ? 'fetchpriority="high" decoding="async"' : 'loading="lazy" decoding="async"'} />
       <div class="story-veil"></div>

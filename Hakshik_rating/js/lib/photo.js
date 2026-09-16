@@ -12,7 +12,8 @@ import { IMAGE_MAX_EDGE, IMAGE_QUALITY } from '../config.js';
  */
 export async function shrink(file) {
   const bitmap = await decode(file);
-  if (!bitmap) return { blob: file, type: file.type || 'image/jpeg' };
+  // 디코딩이 안 되면 크기를 알 수 없다 — 화면에서 기본 비율로 본다
+  if (!bitmap) return { blob: file, type: file.type || 'image/jpeg', width: null, height: null };
 
   const scale = Math.min(1, IMAGE_MAX_EDGE / Math.max(bitmap.width, bitmap.height));
   const w = Math.round(bitmap.width * scale);
@@ -29,7 +30,9 @@ export async function shrink(file) {
     canvas.toBlob(res, 'image/jpeg', IMAGE_QUALITY),
   );
 
-  return blob ? { blob, type: 'image/jpeg' } : { blob: file, type: file.type || 'image/jpeg' };
+  return blob
+    ? { blob, type: 'image/jpeg', width: w, height: h }
+    : { blob: file, type: file.type || 'image/jpeg', width: w, height: h };
 }
 
 async function decode(file) {

@@ -3,6 +3,7 @@ import {
 } from '../lib/store.js';
 import { getRole, ROLES } from '../lib/auth.js';
 import { MEAL_LABEL, MEAL_EMOJI, formatDate, formatTime, starBar, esc } from '../lib/format.js';
+import { aspectStyle } from './mealcard.js';
 import { watchComments } from '../lib/realtime.js';
 import { setAppbar, spinner, errorBox, starPicker, toast, go } from '../ui.js';
 import { invalidateMeals, peekMeals } from '../lib/mealcache.js';
@@ -78,7 +79,7 @@ export default async function rate(root, { id }) {
 
     root.innerHTML = `
       <div class="pad">
-        <figure class="preview">
+        <figure class="preview"${aspectStyle(meal)}>
           <img src="${esc(photo)}" alt="학식 사진" fetchpriority="high" decoding="async" />
         </figure>
 

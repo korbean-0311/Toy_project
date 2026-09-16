@@ -37,6 +37,10 @@ create table if not exists public.meals (
   gps_source   text not null default 'none'
                check (gps_source in ('exif', 'device', 'manual', 'none')),
   cafeteria_id uuid references public.cafeterias(id) on delete set null,
+  -- 올릴 때 재둔 사진 크기. 카드가 이 비율을 그대로 따라가서 사진이 안 잘린다.
+  -- 없으면(예전 기록) 화면에서 4:5 로 본다.
+  photo_w      integer,
+  photo_h      integer,
   created_at   timestamptz not null default now()
 );
 

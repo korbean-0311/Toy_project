@@ -88,7 +88,7 @@ export default async function upload(root) {
       }
     }
 
-    const { blob, type } = await shrink(file);
+    const { blob, type, width, height } = await shrink(file);
     const matched = matchCafeteria(coords, cafeterias);
 
     draft = {
@@ -104,6 +104,8 @@ export default async function upload(root) {
       mealType: mealTypeOf(takenAt ?? new Date()),
       originalSize: file.size,
       size: blob.size,
+      width,
+      height,
     };
 
     renderStage();
@@ -113,7 +115,7 @@ export default async function upload(root) {
     const d = draft;
 
     stage.innerHTML = `
-      <figure class="preview">
+      <figure class="preview"${d.width && d.height ? ` style="--ar:${(d.width / d.height).toFixed(4)}"` : ''}>
         <img src="${d.previewUrl}" alt="선택한 학식 사진" />
       </figure>
 
@@ -202,6 +204,8 @@ export default async function upload(root) {
         lng: draft.coords?.lng ?? null,
         gps_source: draft.coords ? draft.source : 'none',
         cafeteria_id: draft.cafeteriaId || null,
+        photo_w: draft.width,
+        photo_h: draft.height,
       });
 
       invalidateMeals(); // 방금 올린 게 피드에 바로 보이게

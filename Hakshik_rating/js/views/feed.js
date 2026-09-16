@@ -26,7 +26,10 @@ export default async function feed(root) {
 
   setAppbar(`
     <div class="appbar-row">
-      <span class="brand">🍚 자기는 뭘 먹을까?</span>
+      <span class="brand">
+        <img class="brand-mark" src="icon-192.png" alt="" width="22" height="22" />
+        <span class="brand-text">자기는 뭘 먹을까?</span>
+      </span>
       <div class="seg" id="sortSeg">
         ${Object.entries(SORTS)
           .map(

@@ -121,16 +121,28 @@ body {
 }
 .appbar-row:empty { display: none; }
 
-/* 앱 이름이 길어도 옆 버튼들을 밀어내지 않게. 좁은 화면에선 이름이 줄어든다. */
+/* 앱 이름이 길어도 옆 버튼들을 밀어내지 않게. 좁은 화면에선 이름이 줄어든다.
+   (말줄임은 flex 컨테이너에 안 걸리므로 글자를 감싼 .brand-text 가 맡는다) */
 .brand {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
   font-size: 1rem;
   font-weight: 700;
   letter-spacing: -0.02em;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.brand-mark {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+}
+
+.brand-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
 .back {
   border: 0;
